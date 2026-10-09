@@ -2,11 +2,12 @@
 -include .env
 export
 
+# Project targets Python 3.12 (override: make install PYTHON=/path/to/python3.12)
+PYTHON ?= python3.12
+
 ifeq ($(OS),Windows_NT)
-    PYTHON ?= python
     VENV_BIN := .venv/Scripts
 else
-    PYTHON ?= python3
     VENV_BIN := .venv/bin
 endif
 

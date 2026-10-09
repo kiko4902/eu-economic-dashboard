@@ -12,7 +12,7 @@ It is a portfolio piece for a data role.
 
 ## Tech stack
 
-- Python 3.12+: pandas, requests / eurostat, SQLAlchemy, psycopg, python-dotenv, pytest, ruff
+- Python 3.12 (pinned): pandas, requests / eurostat, SQLAlchemy, psycopg, python-dotenv, pytest, ruff
 - PostgreSQL 16 in Docker (Docker Compose), Makefile
 - GitHub Actions CI, Power BI Desktop for the report
 
@@ -62,7 +62,7 @@ Work one phase at a time. Do not start a phase until the previous one meets its
 
 ## Current status
 
-- [ ] Phase 0 – Setup (in progress)
+- [x] Phase 0 – Setup
 - [ ] Phase 1 – Extract
 - [ ] Phase 2 – Data model
 - [ ] Phase 3 – Transform

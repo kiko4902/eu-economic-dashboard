@@ -7,7 +7,7 @@ name = "eu-economic-dashboard"
 version = "0.1.0"
 description = "ETL pipeline from Eurostat to a PostgreSQL star schema, reported in Power BI."
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = ">=3.12,<3.13"
 dependencies = [
     "pandas>=2.2",
     "requests>=2.32",
