@@ -39,6 +39,18 @@ def load_db_settings() -> DbSettings:
     )
 
 
+def load_reader_password() -> str:
+    """Password of the read-only Power BI role (POWERBI_READER_PASSWORD in .env)."""
+    load_dotenv(PROJECT_ROOT / ".env")
+    password = os.getenv("POWERBI_READER_PASSWORD")
+    if not password:
+        raise RuntimeError(
+            "Missing environment variable POWERBI_READER_PASSWORD. Add it to .env "
+            "(see .env.example)."
+        )
+    return password
+
+
 # --- Eurostat API ---------------------------------------------------------------------------
 
 # SDMX 3.0 data endpoint: filters are passed by dimension name (c[unit]=...), so dataset

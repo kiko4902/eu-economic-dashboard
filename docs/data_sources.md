@@ -25,8 +25,11 @@ codes below were verified against the live API on **2026-10-09**.
 | `UNEMPLOYMENT_RATE` | `une_rt_m` | monthly | % of labour force | `raw.une_rt_m` |
 | `GDP_PC_PPS` | `nama_10_pc` | annual | PPS (EU27_2020) per inhabitant | `raw.nama_10_pc` |
 
-Known gaps (expected, quality checks must not fail on them): **Greece** has no house price
-index (`prc_hpi_q`); the **Netherlands** has no full-time adjusted salary (`nama_10_fte`).
+Known gaps (expected, quality checks must not fail on them):
+- **Greece** has no house price index (`prc_hpi_q`).
+- The **Netherlands** has no full-time adjusted salary (`nama_10_fte`).
+- **Net earnings** (`earn_nt_net`) start in **2013** for Croatia and the EU27_2020 aggregate, and in
+  **2014** for Cyprus (other countries from 2010).
 
 ## Datasets
 
@@ -68,7 +71,7 @@ index (`prc_hpi_q`); the **Netherlands** has no full-time adjusted salary (`nama
   - `currency=EUR`: one common currency for comparing countries (PPS also exists; EUR is what people are paid in).
   - `estruct=NET`: net earnings (after tax and social contributions), as in the plan.
   - `ecase=P1_NCH_AW100`: single person without children earning 100% of the average wage, as in the plan.
-- **Coverage:** all 28 geos, 2010–2025 in raw.
+- **Coverage:** all 28 geos, 2010–2025 in raw; Croatia and EU27_2020 from 2013, Cyprus from 2014.
 - ⚠️ **Break in series from 2024, not repaired:**
   - **Source change:** compiled by the OECD (Taxing Wages model) until 2023 and by the
     Commission's JRC (EUROMOD) from 2024 ([metadata](https://ec.europa.eu/eurostat/cache/metadata/en/earn_net_esms.htm)).

@@ -7,60 +7,24 @@ rows into the raw tables inside a transaction that is rolled back, so real data 
 from datetime import date
 from decimal import Decimal
 
-import pandas as pd
 import pytest
-from sqlalchemy import Connection, MetaData, Table, func, select, text
+from sqlalchemy import Connection, MetaData, Table, func, select
 from sqlalchemy.exc import DataError
 
+from db_helpers import RawRow, load_raw, transform
 from pipeline import config
-from pipeline.db import read_sql
-from pipeline.extract import replace_dataset
-from pipeline.transform import (
-    LoadResult,
-    TransformError,
-    dataset_of,
-    indicator_files,
-    load_indicator,
-)
+from pipeline.transform import LoadResult, TransformError, indicator_files
 from pipeline.warehouse import read_seed
-
-NET_EARNINGS_DIMENSIONS = {
-    "freq": "A",
-    "currency": "EUR",
-    "estruct": "NET",
-    "ecase": "P1_NCH_AW100",
-}
-
 
 # --- helpers --------------------------------------------------------------------------------
 
 
-def load_raw_earnings(
-    conn: Connection, rows: list[tuple[str, str, str | None, str | None]]
-) -> None:
-    """Replace raw.earn_nt_net with (geo, time_period, value, flag) fixture rows."""
-    dataset = dataset_of("NET_EARNINGS")
-    load_id = conn.execute(
-        text(read_sql("raw/load_log_start.sql")), {"dataset": dataset.code}
-    ).scalar_one()
-    df = pd.DataFrame(
-        [
-            {
-                **NET_EARNINGS_DIMENSIONS,
-                "geo": geo,
-                "time_period": period,
-                "obs_value": None if value is None else Decimal(value),
-                "obs_flag": flag,
-                "conf_status": None,
-            }
-            for geo, period, value, flag in rows
-        ]
-    )
-    replace_dataset(conn, dataset, df, load_id)
+def load_raw_earnings(conn: Connection, rows: list[RawRow]) -> None:
+    load_raw(conn, "NET_EARNINGS", rows)
 
 
 def transform_net_earnings(conn: Connection) -> LoadResult:
-    return load_indicator(conn, "NET_EARNINGS", indicator_files()["NET_EARNINGS"])
+    return transform(conn, "NET_EARNINGS")
 
 
 def net_earnings_facts(conn: Connection) -> dict[tuple[str, int], tuple[Decimal, str]]:

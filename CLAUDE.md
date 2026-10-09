@@ -27,11 +27,12 @@ sql/warehouse/   star schema DDL + helper functions (*.sql), seed/ upserts, quer
 seeds/           CSV seed data for dim_country, dim_indicator, dim_flag
 sql/transform/   raw -> fact loads: NN_<indicator>.sql (raw filters) + steps/ (shared mapping/load)
 sql/quality/     data quality queries (reconciliation)
-sql/analytics/   views for Power BI
-src/pipeline/    config, db, extract, warehouse, transform, quality, run (entry point)
+sql/analytics/   views for Power BI, NN_<view>.sql in dependency order; queries/
+sql/roles/       read-only powerbi_reader role (SELECT on analytics only)
+src/pipeline/    config, db, extract, warehouse, transform, quality, analytics, run (entry point)
 tests/           pytest tests (fixtures/ holds saved API samples; no network in tests)
 powerbi/         .pbix + PDF export (committed)
-docs/            PLAN.md, data_sources.md, SETUP_NOTES.md, images/ (er_diagram.md)
+docs/            PLAN.md, data_sources.md, findings_draft.md, SETUP_NOTES.md, images/ (er_diagram.md)
 ```
 
 ## Conventions
@@ -43,6 +44,9 @@ docs/            PLAN.md, data_sources.md, SETUP_NOTES.md, images/ (er_diagram.m
 - English for code, comments, commit messages and docs.
 - Type hints on all functions; keep functions small and focused.
 - Keep Eurostat observation flags (`p`, `e`, `b`, ...).
+- Never run destructive SQL (DELETE, TRUNCATE, DROP) by hand outside a transaction that is
+  rolled back, unless the user explicitly asks. Prefer testing on a copy (e.g. a separate
+  scratch database) over the main database.
 
 ## Common commands
 
@@ -51,17 +55,19 @@ make up          # start PostgreSQL (waits for healthcheck)
 make down        # stop PostgreSQL (volume kept)
 make install     # create .venv, install package + dev deps
 make db-shell    # psql inside the container
-make pipeline    # full ETL: extract -> warehouse -> transform -> reconciliation
+make pipeline    # full ETL: extract -> warehouse -> transform -> reconciliation -> analytics
 make extract     # extract only
 make warehouse   # create star schema + populate dimensions
 make transform   # load fact table from raw, then reconcile
+make analytics   # create analytics views + powerbi_reader role (POWERBI_READER_PASSWORD in .env)
 make reconcile   # raw vs fact row counts; every difference must have a skip reason
 make test        # pytest (DB tests need `make up`, run in a rolled-back transaction, skip without DB)
 make lint        # ruff check + format check
 ```
 
 Init scripts in `sql/init/` only run on an empty volume; use `docker compose down -v` to reset.
-DDL uses `CREATE ... IF NOT EXISTS`: after changing a table definition, reset the DB.
+DDL uses `CREATE ... IF NOT EXISTS` and views `CREATE OR REPLACE VIEW`: after changing a table
+definition or removing/renaming view columns, reset the DB.
 Use `POSTGRES_HOST=127.0.0.1` (localhost stalls ~60 s on Windows via IPv6).
 Adding an indicator: config.DATASETS, seeds/dim_indicator.csv, sql/transform/NN_<code>.sql.
 
@@ -76,7 +82,7 @@ Work one phase at a time. Do not start a phase until the previous one meets its
 - [x] Phase 1 – Extract
 - [x] Phase 2 – Data model
 - [x] Phase 3 – Transform
-- [ ] Phase 4 – Analytics
+- [x] Phase 4 – Analytics
 - [ ] Phase 5 – Quality, tests, CI
 - [ ] Phase 6 – Power BI
 - [ ] Phase 7 – Documentation

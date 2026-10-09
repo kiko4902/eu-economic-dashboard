@@ -6,6 +6,7 @@ import pytest
 from sqlalchemy import Connection, Engine
 from sqlalchemy.exc import OperationalError
 
+from pipeline.analytics import create_reader_role, create_views
 from pipeline.db import execute_script, get_engine, sql_files
 from pipeline.warehouse import populate_warehouse
 
@@ -31,13 +32,16 @@ def engine(database: Engine | str) -> Engine:
 
 @pytest.fixture
 def db(engine: Engine) -> Iterator[Connection]:
-    """Connection with raw tables and a populated warehouse; every change is rolled back."""
+    """Connection with raw tables, populated warehouse, analytics views and the reader role;
+    every change is rolled back."""
     with engine.connect() as conn:
         transaction = conn.begin()
         try:
             for path in sql_files("raw/tables"):
                 execute_script(conn, path)
             populate_warehouse(conn)
+            create_views(conn)
+            create_reader_role(conn, password="test-only")
             yield conn
         finally:
             transaction.rollback()

@@ -102,7 +102,8 @@ eu-economic-dashboard/
 │   ├── warehouse/            # DDL for dimensions and facts
 │   ├── transform/            # raw → warehouse: one file per indicator + steps/
 │   ├── quality/              # data quality queries (reconciliation)
-│   └── analytics/            # views
+│   ├── roles/                # read-only Power BI role
+│   └── analytics/            # views, one file per view
 ├── src/
 │   └── pipeline/
 │       ├── config.py
@@ -145,16 +146,40 @@ Every table and column has a `COMMENT`.
 
 ## 7. Analytics layer (views in `analytics` schema)
 
-- `v_observations` – flat, human-readable join of fact + all dimensions (main Power BI source)
-- `v_yoy_change` – year-over-year change per country and indicator (`LAG`)
+Plain views, one file per view in `sql/analytics/NN_<view>.sql`, created in dependency order by
+`analytics.py` (`make analytics`). Readable snake_case columns with `COMMENT`s for Power BI.
+
+Rules for all annual views:
+- **Complete years only**: 12 monthly / 4 quarterly / 1 annual observation. Partial years
+  (e.g. the current year) are excluded, never averaged.
+- **Flags carried through**: `has_provisional`, `has_estimated`, `has_break` are true if any
+  underlying observation (including the previous year or the base year, where used) has that flag.
+
+Views:
+- `v_observations` – flat join of fact + all dimensions (main Power BI source)
+- `v_annual_summary` – all indicators at annual grain (complete years): annual indicators as
+  reported; unemployment, house prices and the HICP index as annual averages; plus derived
+  `HICP_INFLATION` = annual average HICP index / previous year's − 1 (Eurostat's method; the
+  average of monthly annual rates is not used). Starts in 2011 because it needs two years.
+- `v_yoy_change` – change on the previous year per country and indicator (`LAG`); absolute change,
+  and % change except for indicators that are rates
 - `v_real_wage_growth` – real wage growth per country/year, computed as `(1 + nominal wage growth) / (1 + annual inflation) − 1`, not as a simple difference:
   - nominal wage growth: year-over-year change of `WAGE_NAC` (national currency, so no exchange-rate effects)
-  - annual inflation: from `HICP_INDEX` as annual average index / previous year's annual average index − 1 (only years with all 12 months), not the average of the 12 monthly annual rates; this reproduces Eurostat's official annual average rate (`prc_hicp_ainr`)
-  - net take-home pay (`NET_EARNINGS`) can be shown the same way for 2010–2023 only
-- `v_index_base_2015` – each indicator rebased to 2015 = 100 for cross-indicator comparison
-- `v_country_rank` – rank of countries per indicator per year (`RANK() OVER (PARTITION BY ...)`)
-- `v_housing_affordability` – house price index vs earnings index (both 2015 = 100)
-- `v_annual_summary` – monthly/quarterly indicators aggregated to annual averages, so all indicators can be compared at annual grain
+  - annual inflation: `HICP_INFLATION`; this reproduces Eurostat's official annual average rate (`prc_hicp_ainr`)
+  - `real_wage_index_2010`: real growth chained from 2010 = 100 (NULL after a gap)
+- `v_index_base_2015` – HICP index, house prices, wages (NAC and EUR), net earnings and GDP per
+  capita rebased to 2015 = 100 (value / 2015 value) for cross-indicator charts
+- `v_housing_affordability` – house price index vs `WAGE_NAC` index, both 2015 = 100 and both in
+  national-currency terms, plus their ratio (> 100 = housing less affordable relative to wages)
+- `v_gdp_relative_to_eu` – GDP per capita in PPS, EU27_2020 = 100
+- `v_country_rank` – rank of the EU-27 member states (aggregate excluded) per indicator and
+  year, 1 = best, direction per indicator (higher is better for wages in EUR, net earnings,
+  GDP per capita and real wage growth; lower for unemployment, inflation and house prices
+  relative to wages). `WAGE_NAC` and the index levels are not ranked (not comparable across
+  countries).
+
+Access: Power BI connects as the read-only role `powerbi_reader` (password `POWERBI_READER_PASSWORD`
+in `.env`): `SELECT` on `analytics` only, no access to `raw` or `warehouse`, read-only sessions.
 
 ## 8. Data quality
 
@@ -182,7 +207,7 @@ Export: `.pbix` and PDF committed in `powerbi/`, screenshots in `docs/images/`.
 ## 10. DevOps
 
 - `docker compose up -d` starts PostgreSQL with schemas created by `sql/init/`
-- Makefile targets: `up`, `down`, `install`, `pipeline` (full ETL), `extract`, `warehouse`, `transform`, `reconcile`, `test`, `lint`, `db-shell`
+- Makefile targets: `up`, `down`, `install`, `pipeline` (full ETL), `extract`, `warehouse`, `transform`, `reconcile`, `analytics`, `test`, `lint`, `db-shell`
 - GitHub Actions on push/PR: install deps, lint (`ruff`), run tests against a Postgres service container, run the pipeline on a small subset
 - Optional later: hosted Postgres (e.g. Neon free tier) + scheduled monthly refresh workflow
 
