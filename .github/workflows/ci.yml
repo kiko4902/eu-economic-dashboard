@@ -7,6 +7,8 @@ on:
 permissions:
   contents: read
 
+# Runners are pinned (ubuntu-latest moves to Ubuntu 26 from 2026-10-19); bump deliberately.
+
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
@@ -14,11 +16,11 @@ concurrency:
 jobs:
   lint-and-unit-tests:
     name: Lint and unit tests
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: astral-sh/setup-uv@v6
+      - uses: astral-sh/setup-uv@v7
         with:
           enable-cache: true
           cache-dependency-glob: uv.lock
@@ -35,12 +37,14 @@ jobs:
   pipeline:
     name: Pipeline, database tests and quality checks
     needs: lint-and-unit-tests
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
 
     services:
       postgres:
-        image: postgres:16
+        # Docker Official Image via the AWS ECR Public mirror: same image, not subject to
+        # Docker Hub outages or anonymous pull limits.
+        image: public.ecr.aws/docker/library/postgres:16
         env:
           POSTGRES_USER: eu_dashboard
           POSTGRES_PASSWORD: ci_only_password
@@ -64,9 +68,9 @@ jobs:
       REQUIRE_DB: "1" # database tests must run here: fail instead of skip
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: astral-sh/setup-uv@v6
+      - uses: astral-sh/setup-uv@v7
         with:
           enable-cache: true
           cache-dependency-glob: uv.lock

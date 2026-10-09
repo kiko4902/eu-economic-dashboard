@@ -11,6 +11,8 @@ on:
 permissions:
   contents: read
 
+# Runners are pinned (ubuntu-latest moves to Ubuntu 26 from 2026-10-19); bump deliberately.
+
 defaults:
   run:
     shell: bash # explicit bash adds -o pipefail, so `make ... | tee` keeps make's exit code
@@ -18,12 +20,14 @@ defaults:
 jobs:
   pipeline:
     name: Full pipeline and quality checks
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
 
     services:
       postgres:
-        image: postgres:16
+        # Docker Official Image via the AWS ECR Public mirror: same image, not subject to
+        # Docker Hub outages or anonymous pull limits.
+        image: public.ecr.aws/docker/library/postgres:16
         env:
           POSTGRES_USER: eu_dashboard
           POSTGRES_PASSWORD: ci_only_password
@@ -45,9 +49,9 @@ jobs:
       POWERBI_READER_PASSWORD: ci_only_reader_password
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: astral-sh/setup-uv@v6
+      - uses: astral-sh/setup-uv@v7
         with:
           enable-cache: true
           cache-dependency-glob: uv.lock
@@ -64,7 +68,7 @@ jobs:
 
       - name: Keep the logs
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: pipeline-logs
           path: "*.log"
