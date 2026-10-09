@@ -22,7 +22,8 @@ from sqlalchemy.exc import DBAPIError
 
 from pipeline import config
 from pipeline.config import Dataset
-from pipeline.db import get_engine, read_sql, sql_files
+from pipeline.db import execute_script, get_engine, read_sql, sql_files
+from pipeline.logs import configure_logging
 
 logger = logging.getLogger(__name__)
 
@@ -181,7 +182,7 @@ def ensure_raw_tables(engine: Engine) -> None:
     """Create raw.load_log and the raw dataset tables if they do not exist."""
     with engine.begin() as conn:
         for path in sql_files("raw/tables"):
-            conn.exec_driver_sql(path.read_text(encoding="utf-8"))
+            execute_script(conn, path)
 
 
 def replace_dataset(conn: Connection, dataset: Dataset, df: pd.DataFrame, load_id: int) -> int:
@@ -244,12 +245,6 @@ def run_extract(datasets: tuple[Dataset, ...] = config.DATASETS) -> list[LoadRes
     ensure_raw_tables(engine)
     with requests.Session() as session:
         return [extract_dataset(engine, dataset, session) for dataset in datasets]
-
-
-def configure_logging() -> None:
-    logging.basicConfig(
-        level=logging.INFO, format="%(asctime)s %(levelname)-7s %(name)s: %(message)s"
-    )
 
 
 def main() -> int:

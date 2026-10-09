@@ -16,15 +16,44 @@ codes below were verified against the live API on **2026-10-09**.
 
 | Indicator (our code) | Dataset | Frequency | Unit | Raw table |
 |---|---|---|---|---|
-| `NET_EARNINGS` | `earn_nt_net` | annual | EUR per year | `raw.earn_nt_net` |
+| `AVG_FTE_SALARY` (**primary wage indicator**) | `nama_10_fte` | annual | EUR (and NAC) per employee per year | `raw.nama_10_fte` |
+| `NET_EARNINGS` (secondary, **2010–2023 only**) | `earn_nt_net` | annual | EUR per year | `raw.earn_nt_net` |
 | `HICP_ANNUAL_RATE` | `prc_hicp_minr` (replaces `prc_hicp_manr`) | monthly | % change on same month of previous year | `raw.prc_hicp_minr` |
 | `HOUSE_PRICE_INDEX` | `prc_hpi_q` | quarterly | index, 2015 = 100 | `raw.prc_hpi_q` |
 | `UNEMPLOYMENT_RATE` | `une_rt_m` | monthly | % of labour force | `raw.une_rt_m` |
 | `GDP_PC_PPS` | `nama_10_pc` | annual | PPS (EU27_2020) per inhabitant | `raw.nama_10_pc` |
 
+Known gaps (expected, quality checks must not fail on them): **Greece** has no house price
+index (`prc_hpi_q`); the **Netherlands** has no full-time adjusted salary (`nama_10_fte`).
+
 ## Datasets
 
-### Net earnings – `earn_nt_net`
+### Average full-time adjusted salary – `nama_10_fte` (primary wage indicator)
+
+- **Title:** Average full time adjusted salary per employee
+- **URL:** https://ec.europa.eu/eurostat/databrowser/view/nama_10_fte/default/table?lang=en
+- **Metadata:** https://ec.europa.eu/eurostat/cache/metadata/en/nama_10_fte_esms.htm
+- **Definition:** gross wages and salaries (national accounts, ESA D.11) / number of employees,
+  adjusted to full-time equivalents with an LFS-based FTE ratio: `D11 / SAL * FTE_R`. Gross
+  (before income tax and employee social contributions), current prices.
+- **Frequency / unit:** annual / EUR and national currency (`NAC`).
+- **Filters:**
+  - `freq=A`: the only frequency.
+  - `unit`: **not filtered, both kept**. `EUR` is used for comparing levels between countries.
+    For growth in non-euro countries, growth in EUR includes exchange-rate movements, so `NAC`
+    is the right basis for real wage growth (nominal growth − HICP inflation). Which unit feeds
+    which view is decided in Phases 3–4.
+- **Coverage:** 26 member states + `EU27_2020`, 2010–2024 (released annually in autumn,
+  about T+9 months, so 2025 is expected shortly). No observation flags in the data.
+- ⚠️ **Netherlands excluded by Eurostat:** Statistics Netherlands uses a different,
+  register-based method, so Eurostat does not publish the indicator for NL. Known gap.
+- ⚠️ **Possible unflagged breaks:** the metadata warns that LFS definition changes can cause
+  breaks in the FTE ratio, with "an additional break between 2020 and 2021" for some countries.
+  None are flagged in the data.
+- **Why primary:** a consistent national-accounts series with no compiler change. It replaces
+  `earn_nt_net` for wage growth and real wage growth after that dataset's 2024 break.
+
+### Net earnings – `earn_nt_net` (secondary, used up to 2023)
 
 - **Title:** Annual net earnings
 - **URL:** https://ec.europa.eu/eurostat/databrowser/view/earn_nt_net/default/table?lang=en
@@ -33,14 +62,20 @@ codes below were verified against the live API on **2026-10-09**.
   - `currency=EUR`: one common currency for comparing countries (PPS also exists; EUR is what people are paid in).
   - `estruct=NET`: net earnings (after tax and social contributions), as in the plan.
   - `ecase=P1_NCH_AW100`: single person without children earning 100% of the average wage, as in the plan.
-- **Coverage:** all 28 geos, 2010–2025.
-- ⚠️ **Break in series in 2024.** Eurostat's metadata says the data were estimated by the OECD
-  until 2023 and by the JRC (EUROMOD) from 2024, and 2024 is flagged `b`. In the data, **every
-  2024 value is about 1/12 of the 2023 value** (e.g. HR 12,601 → 1,267 → 16,892; EU27 28,324 →
-  2,398 → 29,954). 2024 looks like a monthly amount. 2025 is back at an annual level but on the
-  new methodology: the 2023 → 2025 change ranges from −10% (NL) to +46% (BG), so 2025 is not
-  comparable with 2023. `earn_nt_netft` has the same break. Raw data is kept as received. How to
-  handle it (exclude 2024, treat 2024+ as a separate series, …) is decided in Phase 3.
+- **Coverage:** all 28 geos, 2010–2025 in raw.
+- ⚠️ **Break in series from 2024, not repaired:**
+  - **Source change:** compiled by the OECD (Taxing Wages model) until 2023 and by the
+    Commission's JRC (EUROMOD) from 2024 ([metadata](https://ec.europa.eu/eurostat/cache/metadata/en/earn_net_esms.htm)).
+    2024 is flagged `b`.
+  - **2024 is on a monthly scale:** every 2024 value is about 1/12 of the 2023 value
+    (HR 12,601 → 1,267; EU27 28,324 → 2,398).
+  - **2025 is on a new basis:** back at an annual level, but the 2023 → 2025 change ranges from
+    −10% (NL) to +46% (BG), so 2025 is not comparable with 2023 (HR 16,892, +34%).
+  - `earn_nt_netft` has the same break, so it is not an alternative.
+- **Decision:** `earn_nt_net` is used **only for 2010–2023**, as a secondary "net take-home pay"
+  indicator (net of tax and contributions for a typical single worker). Raw keeps all years
+  unchanged; the cut-off is applied in the transform (Phase 3) and recorded in the model as
+  `warehouse.dim_indicator.valid_to_year = 2023`. Wage growth after 2023 uses `nama_10_fte`.
 
 ### Inflation (HICP) – `prc_hicp_minr`
 
@@ -95,7 +130,12 @@ codes below were verified against the live API on **2026-10-09**.
 
 ## Observation flags
 
-Seen in the loaded data (Eurostat flag codes):
+`warehouse.dim_flag` holds Eurostat's full official `OBS_FLAG` codelist (42 codes, mostly
+combinations such as `bp` = break + provisional) plus `''` for "no flag". Source:
+https://ec.europa.eu/eurostat/api/dissemination/sdmx/2.1/codelist/ESTAT/OBS_FLAG.
+Confidentiality is a separate attribute (`CONF_STATUS`), not a flag.
+
+Single flags seen in the loaded data:
 
 | Flag | Meaning |
 |---|---|
@@ -104,6 +144,25 @@ Seen in the loaded data (Eurostat flag codes):
 | `e` | estimated |
 | `p` | provisional |
 
+## Reference data for dimensions
+
+Seeded from `seeds/*.csv` into the `warehouse` schema (Phase 2).
+
+- **Euro adoption years** (`dim_country.euro_adoption_year`): from the ECB's list of euro area
+  members, https://www.ecb.europa.eu/euro/intro/html/map.en.html (checked 2026-10-09). The year
+  is the year of joining (e.g. 1999 for the founding members, cash from 2002; Greece 2001,
+  Croatia 2023, Bulgaria 2026). NULL for CZ, DK, HU, PL, RO, SE.
+- **Regions** (`dim_country.region`): UN M49 geoscheme sub-regions,
+  https://unstats.un.org/unsd/methodology/m49/. It is an official, neutral and widely used
+  classification, rather than an ad-hoc "Central-Eastern" grouping. Northern: DK, EE, FI, IE,
+  LT, LV, SE; Western: AT, BE, DE, FR, LU, NL; Southern: EL, ES, HR, IT, MT, PT, SI (+ CY);
+  Eastern: BG, CZ, HU, PL, RO, SK.
+  **Deviation:** M49 places Cyprus in Western Asia. Since this dashboard only has European
+  regions, Cyprus is mapped to **Southern Europe** (as in EuroVoc).
+- **ISO codes** (`dim_country.iso_alpha2`): ISO 3166-1 alpha-2, for Power BI maps. Equal to
+  the Eurostat geo code except Greece (Eurostat `EL`, ISO `GR`).
+- **Flags** (`dim_flag`): see [Observation flags](#observation-flags).
+
 ## Licence and attribution
 
 Eurostat data is licensed under [Creative Commons Attribution 4.0 International (CC BY 4.0)](https://creativecommons.org/licenses/by/4.0/)
@@ -111,4 +170,4 @@ Eurostat data is licensed under [Creative Commons Attribution 4.0 International 
 
 Attribution text:
 
-> Source: Eurostat (earn_nt_net, prc_hicp_minr, prc_hpi_q, une_rt_m, nama_10_pc), © European Union, CC BY 4.0. Data retrieved via the Eurostat dissemination API.
+> Source: Eurostat (nama_10_fte, earn_nt_net, prc_hicp_minr, prc_hpi_q, une_rt_m, nama_10_pc), © European Union, CC BY 4.0. Data retrieved via the Eurostat dissemination API.

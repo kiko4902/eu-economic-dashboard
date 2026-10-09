@@ -9,6 +9,7 @@ from dotenv import load_dotenv
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 SQL_DIR = PROJECT_ROOT / "sql"
+SEEDS_DIR = PROJECT_ROOT / "seeds"
 
 
 @dataclass(frozen=True)
@@ -30,7 +31,7 @@ def load_db_settings() -> DbSettings:
             f"Missing environment variables: {', '.join(missing)}. Create .env from .env.example."
         )
     return DbSettings(
-        host=os.getenv("POSTGRES_HOST", "localhost"),
+        host=os.getenv("POSTGRES_HOST", "127.0.0.1"),
         port=int(os.getenv("POSTGRES_PORT", "5432")),
         user=os.environ["POSTGRES_USER"],
         password=os.environ["POSTGRES_PASSWORD"],
@@ -106,5 +107,12 @@ DATASETS: tuple[Dataset, ...] = (
         indicator_code="GDP_PC_PPS",
         dimensions=("freq", "unit", "na_item", "geo"),
         filters={"freq": "A", "unit": "CP_PPS_EU27_2020_HAB", "na_item": "B1GQ"},
+    ),
+    Dataset(
+        code="nama_10_fte",
+        indicator_code="AVG_FTE_SALARY",
+        dimensions=("freq", "unit", "geo"),
+        # Both units are kept: EUR for level comparisons, NAC for growth in non-euro countries.
+        filters={"freq": "A"},
     ),
 )

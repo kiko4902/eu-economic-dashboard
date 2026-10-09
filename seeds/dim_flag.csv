@@ -1,0 +1,44 @@
+flag_code,description
+,no flag
+b,break in time series
+d,definition differs (see metadata)
+e,estimated
+f,forecast
+i,value imputed by Eurostat or other receiving agencies
+m,missing value; data cannot exist
+n,not significant
+p,provisional
+u,low reliability
+bd,"break in time series, definition differs (see metadata)"
+be,"break in time series, estimated"
+bf,"break in time series, forecast"
+bi,"break in time series, value imputed by Eurostat or other receiving agencies"
+bm,"break in time series, missing value; data cannot exist"
+bn,"break in time series, not significant"
+bp,"break in time series, provisional"
+bu,"break in time series, low reliability"
+de,"definition differs (see metadata), estimated"
+df,"definition differs (see metadata), forecast"
+di,"definition differs (see metadata), value imputed by Eurostat or other receiving agencies"
+dm,"definition differs (see metadata), missing value; data cannot exist"
+dn,"definition differs (see metadata), not significant"
+dp,"definition differs (see metadata), provisional"
+du,"definition differs (see metadata), low reliability"
+ep,"estimated, provisional"
+ip,"value imputed by Eurostat or other receiving agencies, provisional"
+pu,"provisional, low reliability"
+bde,"break in time series, definition differs (see metadata), estimated"
+bdf,"break in time series, definition differs (see metadata), forecast"
+bdi,"break in time series, definition differs (see metadata), value imputed by Eurostat or other receiving agencies"
+bdm,"break in time series, definition differs (see metadata), missing value; data cannot exist"
+bdn,"break in time series, definition differs (see metadata), not significant"
+bdp,"break in time series, definition differs (see metadata), provisional"
+bdu,"break in time series, definition differs (see metadata), low reliability"
+bep,"break in time series, estimated, provisional"
+bip,"break in time series, value imputed by Eurostat or other receiving agencies, provisional"
+bpu,"break in time series, provisional, low reliability"
+dep,"definition differs (see metadata), estimated, provisional"
+dip,"definition differs (see metadata), value imputed by Eurostat or other receiving agencies, provisional"
+dpu,"definition differs (see metadata), provisional, low reliability"
+bdep,"break in time series, definition differs (see metadata), estimated, provisional"
+bdip,"break in time series, definition differs (see metadata), value imputed by Eurostat or other receiving agencies, provisional"

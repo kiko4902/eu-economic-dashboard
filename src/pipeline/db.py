@@ -3,7 +3,7 @@
 import re
 from pathlib import Path
 
-from sqlalchemy import URL, Engine, create_engine
+from sqlalchemy import URL, Connection, Engine, create_engine
 
 from pipeline.config import SQL_DIR, DbSettings, load_db_settings
 
@@ -39,3 +39,15 @@ def read_sql(relative_path: str, **identifiers: str) -> str:
 def sql_files(relative_dir: str) -> list[Path]:
     """All .sql files in sql/<relative_dir>, sorted by name."""
     return sorted((SQL_DIR / relative_dir).glob("*.sql"))
+
+
+def execute_script(conn: Connection, path: Path) -> None:
+    """Run a whole .sql file (DDL, comments) on the connection's current transaction.
+
+    Uses the driver cursor without parameters, so '%' in comments is not a placeholder.
+    """
+    cursor = conn.connection.cursor()
+    try:
+        cursor.execute(path.read_text(encoding="utf-8"))
+    finally:
+        cursor.close()

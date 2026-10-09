@@ -23,13 +23,14 @@ Final dataset choices are in `docs/data_sources.md` and supersede PLAN section 2
 ```
 sql/init/        schema creation (raw, warehouse, analytics), run on first DB start
 sql/raw/         raw table DDL (tables/, applied by extract) and load_log queries
-sql/warehouse/   DDL for dimensions and facts
+sql/warehouse/   star schema DDL (*.sql), seed/ upserts, queries/
+seeds/           CSV seed data for dim_country, dim_indicator, dim_flag
 sql/transform/   raw -> warehouse loads
 sql/analytics/   views for Power BI
-src/pipeline/    config, db, extract, transform, quality, run (entry point)
+src/pipeline/    config, db, extract, warehouse, transform, quality, run (entry point)
 tests/           pytest tests (fixtures/ holds saved API samples; no network in tests)
 powerbi/         .pbix + PDF export (committed)
-docs/            PLAN.md, data_sources.md, images/
+docs/            PLAN.md, data_sources.md, SETUP_NOTES.md, images/ (er_diagram.md)
 ```
 
 ## Conventions
@@ -49,14 +50,17 @@ make up          # start PostgreSQL (waits for healthcheck)
 make down        # stop PostgreSQL (volume kept)
 make install     # create .venv, install package + dev deps
 make db-shell    # psql inside the container
-make pipeline    # full ETL (python -m pipeline.run)
+make pipeline    # full ETL: extract -> warehouse (python -m pipeline.run)
 make extract     # extract only
+make warehouse   # create star schema + populate dimensions
 make transform   # transform only
 make test        # pytest
 make lint        # ruff check + format check
 ```
 
 Init scripts in `sql/init/` only run on an empty volume; use `docker compose down -v` to reset.
+DDL uses `CREATE ... IF NOT EXISTS`: after changing a table definition, reset the DB.
+Use `POSTGRES_HOST=127.0.0.1` (localhost stalls ~60 s on Windows via IPv6).
 
 ## Workflow
 
@@ -67,7 +71,7 @@ Work one phase at a time. Do not start a phase until the previous one meets its
 
 - [x] Phase 0 – Setup
 - [x] Phase 1 – Extract
-- [ ] Phase 2 – Data model
+- [x] Phase 2 – Data model
 - [ ] Phase 3 – Transform
 - [ ] Phase 4 – Analytics
 - [ ] Phase 5 – Quality, tests, CI

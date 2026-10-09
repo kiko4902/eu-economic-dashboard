@@ -23,8 +23,9 @@ The project is a portfolio piece for a data role. It must demonstrate:
 
 | Indicator | Dataset code | Frequency | Notes |
 |---|---|---|---|
-| Net earnings | `earn_nt_net` | annual | pick one household type, e.g. single person without children, 100% of average earnings, EUR |
-| Inflation (HICP, annual rate) | `prc_hicp_manr` | monthly | all-items (`CP00`) |
+| Average full-time adjusted salary (primary wage indicator, added in Phase 1) | `nama_10_fte` | annual | EUR and NAC; Netherlands not published |
+| Net earnings (secondary, used up to 2023) | `earn_nt_net` | annual | single person without children, 100% of average earnings, EUR; series break from 2024 |
+| Inflation (HICP, annual rate) | `prc_hicp_minr` (replaces discontinued `prc_hicp_manr`) | monthly | all-items (`TOTAL`) |
 | House price index | `prc_hpi_q` | quarterly | total, index 2015=100 |
 | Unemployment rate | `une_rt_m` | monthly | seasonally adjusted, total, % of labour force |
 | GDP per capita (PPS) | `nama_10_pc` | annual | |
@@ -99,22 +100,27 @@ eu-economic-dashboard/
 
 ## 6. Data model (warehouse schema)
 
-**dim_country**
-- country_key (PK, surrogate), country_code (Eurostat geo code, unique), country_name, is_eu_member (bool), is_eurozone (bool), region (e.g. Western / Southern / Central-Eastern / Northern), is_aggregate (bool, true for EU27_2020)
+DDL in `sql/warehouse/`, seed data in `seeds/`, ER diagram in `docs/images/er_diagram.md`.
+Every table and column has a `COMMENT`.
 
-**dim_time**
-- time_key (PK, e.g. 20240101), period_date (first day of period), year, quarter, month, period_label
-- One row per month in range; annual and quarterly observations map to the first day of their period. The fact table stores the frequency.
+**dim_country** (seeded from `seeds/dim_country.csv`)
+- country_key (PK, surrogate), country_code (Eurostat geo code, unique), country_name, iso_alpha2 (ISO code for maps; Greece = GR, Eurostat uses EL), is_eu_member (bool), euro_adoption_year (nullable int, verified against the ECB; e.g. HR 2023, BG 2026; NULL = not in the euro area), region (UN M49 geoscheme: Northern / Western / Southern / Eastern Europe; Cyprus mapped to Southern Europe), is_aggregate (bool, true for EU27_2020)
+- CHECK: aggregates have no region, ISO code, membership or euro year
 
-**dim_indicator**
-- indicator_key (PK), indicator_code (unique, our own short code e.g. `NET_EARNINGS`), name, unit, frequency (A/Q/M), source_dataset (Eurostat code), description
+**dim_time** (generated in SQL with `generate_series`)
+- time_key (PK, e.g. 20240101), period_date (first day of period), year, quarter, month, month_name, period_label (YYYY-MM), quarter_label (YYYY-Qn)
+- One row per month from 2010-01 to December of the current year; annual and quarterly observations map to the first day of their period. The fact table stores the frequency.
 
-**dim_flag**
-- flag_key (PK), flag_code (e.g. `p`, `e`, `b`, or empty), description
+**dim_indicator** (seeded from `seeds/dim_indicator.csv`; one row per indicator)
+- indicator_key (PK), indicator_code (unique, our own short code e.g. `AVG_FTE_SALARY`), name, unit, frequency (A/Q/M), source_dataset (Eurostat code), source_filters, description, notes (series breaks, known gaps), valid_from_year / valid_to_year (nullable; the fact load only keeps years in this range, e.g. `NET_EARNINGS` valid_to_year = 2023)
+
+**dim_flag** (seeded from `seeds/dim_flag.csv`)
+- flag_key (PK), flag_code (official Eurostat OBS_FLAG codelist incl. combinations such as `bp`; empty string = no flag), description, is_break / is_estimated / is_provisional (generated)
 
 **fact_observation**
-- country_key, time_key, indicator_key (FKs), flag_key (FK), value (numeric)
-- Unique constraint on (country_key, time_key, indicator_key)
+- country_key, time_key, indicator_key (FKs), flag_key (FK), frequency, value (numeric, not null)
+- Primary key on (country_key, time_key, indicator_key)
+- Composite FK (indicator_key, frequency) → dim_indicator, so the frequency always matches the indicator
 - Indexes on the FK columns used for filtering
 
 ## 7. Analytics layer (views in `analytics` schema)

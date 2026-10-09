@@ -29,7 +29,7 @@ _TODO_
 ## Data sources and licence
 
 Data: © European Union, Eurostat, licensed under
-[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Datasets: `earn_nt_net`, `prc_hicp_minr`,
+[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Datasets: `nama_10_fte`, `earn_nt_net`, `prc_hicp_minr`,
 `prc_hpi_q`, `une_rt_m`, `nama_10_pc`; see [docs/data_sources.md](docs/data_sources.md) for filters and caveats.
 
 ## Tech stack and project structure

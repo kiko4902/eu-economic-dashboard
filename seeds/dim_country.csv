@@ -1,0 +1,29 @@
+country_code,country_name,iso_alpha2,is_eu_member,euro_adoption_year,region,is_aggregate
+AT,Austria,AT,true,1999,Western Europe,false
+BE,Belgium,BE,true,1999,Western Europe,false
+BG,Bulgaria,BG,true,2026,Eastern Europe,false
+CY,Cyprus,CY,true,2008,Southern Europe,false
+CZ,Czechia,CZ,true,,Eastern Europe,false
+DE,Germany,DE,true,1999,Western Europe,false
+DK,Denmark,DK,true,,Northern Europe,false
+EE,Estonia,EE,true,2011,Northern Europe,false
+EL,Greece,GR,true,2001,Southern Europe,false
+ES,Spain,ES,true,1999,Southern Europe,false
+FI,Finland,FI,true,1999,Northern Europe,false
+FR,France,FR,true,1999,Western Europe,false
+HR,Croatia,HR,true,2023,Southern Europe,false
+HU,Hungary,HU,true,,Eastern Europe,false
+IE,Ireland,IE,true,1999,Northern Europe,false
+IT,Italy,IT,true,1999,Southern Europe,false
+LT,Lithuania,LT,true,2015,Northern Europe,false
+LU,Luxembourg,LU,true,1999,Western Europe,false
+LV,Latvia,LV,true,2014,Northern Europe,false
+MT,Malta,MT,true,2008,Southern Europe,false
+NL,Netherlands,NL,true,1999,Western Europe,false
+PL,Poland,PL,true,,Eastern Europe,false
+PT,Portugal,PT,true,1999,Southern Europe,false
+RO,Romania,RO,true,,Eastern Europe,false
+SE,Sweden,SE,true,,Northern Europe,false
+SI,Slovenia,SI,true,2007,Southern Europe,false
+SK,Slovakia,SK,true,2009,Eastern Europe,false
+EU27_2020,European Union (27 countries from 2020),,false,,,true

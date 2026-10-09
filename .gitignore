@@ -29,6 +29,7 @@ Thumbs.db
 data/
 *.csv
 !tests/fixtures/*.csv
+!seeds/*.csv
 *.tsv
 *.parquet
 *.dump

@@ -1,15 +1,21 @@
 """Pipeline entry point: python -m pipeline.run
 
-Currently runs the extract step only; transform is added in Phase 3.
+Runs extract -> warehouse (schema + dimensions). The fact load (transform) is added in Phase 3.
 """
 
+import logging
 import sys
 
-from pipeline import extract
+from pipeline import extract, warehouse
+
+logger = logging.getLogger(__name__)
 
 
 def main() -> int:
-    return extract.main()
+    if extract.main() != 0:
+        logger.error("Extract failed; warehouse step skipped")
+        return 1
+    return warehouse.main()
 
 
 if __name__ == "__main__":
