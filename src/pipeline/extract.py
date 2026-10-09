@@ -21,7 +21,14 @@ from sqlalchemy import Connection, Engine, MetaData, Table, insert, text
 
 from pipeline import config
 from pipeline.config import Dataset
-from pipeline.db import describe_error, execute_script, get_engine, read_sql, sql_files
+from pipeline.db import (
+    describe_error,
+    ensure_schemas,
+    execute_script,
+    get_engine,
+    read_sql,
+    sql_files,
+)
 from pipeline.logs import configure_logging
 
 logger = logging.getLogger(__name__)
@@ -180,6 +187,7 @@ def _to_decimal(dataset: Dataset, value: str) -> Decimal | None:
 def ensure_raw_tables(engine: Engine) -> None:
     """Create raw.load_log and the raw dataset tables if they do not exist."""
     with engine.begin() as conn:
+        ensure_schemas(conn)
         for path in sql_files("raw/tables"):
             execute_script(conn, path)
 

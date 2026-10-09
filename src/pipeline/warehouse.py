@@ -11,7 +11,7 @@ import sys
 from sqlalchemy import Connection, Engine, text
 
 from pipeline import config
-from pipeline.db import execute_script, get_engine, read_sql, sql_files
+from pipeline.db import ensure_schemas, execute_script, get_engine, read_sql, sql_files
 from pipeline.logs import configure_logging
 
 logger = logging.getLogger(__name__)
@@ -54,6 +54,7 @@ def row_counts(conn: Connection) -> dict[str, int]:
 
 def populate_warehouse(conn: Connection) -> None:
     """Create warehouse tables and functions and populate the dimensions (caller's transaction)."""
+    ensure_schemas(conn)
     apply_ddl(conn)
     for name in SEEDED_DIMENSIONS:
         seed_dimension(conn, name)

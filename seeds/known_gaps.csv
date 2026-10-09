@@ -1,0 +1,8 @@
+indicator_code,country_code,gap_type,from_period,to_period,reason
+HOUSE_PRICE_INDEX,EL,no_series,,,Greece does not report a house price index to Eurostat.
+WAGE_NAC,NL,no_series,,,Not published for the Netherlands (Statistics Netherlands uses a different method).
+WAGE_EUR,NL,no_series,,,Not published for the Netherlands (Statistics Netherlands uses a different method).
+NET_EARNINGS,HR,missing_periods,2010,2012,Series starts in 2013.
+NET_EARNINGS,EU27_2020,missing_periods,2010,2012,Series starts in 2013.
+NET_EARNINGS,CY,missing_periods,2010,2013,Series starts in 2014 within the project scope (2005-2007 exist before it).
+NET_EARNINGS,CY,missing_periods,2015,2016,Not published for 2015 and 2016.

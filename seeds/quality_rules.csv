@@ -1,0 +1,10 @@
+indicator_code,min_value,max_value,max_lag_months,note
+WAGE_NAC,1000,100000000,24,"National currency per year: wide range (HUF ~7 million). Annual, published about T+9 months."
+WAGE_EUR,2000,150000,24,"EUR per year. Annual, published about T+9 months."
+NET_EARNINGS,2000,100000,,"EUR per year; the range would catch the 2024 monthly-scale break. Frozen at 2023 (valid_to_year), so no freshness rule."
+HICP_INDEX,20,300,3,"Index 2025 = 100. Monthly, flash estimate at the end of the month."
+HICP_ANNUAL_RATE,-10,30,3,"% change on same month of previous year. Monthly."
+HICP_INFLATION,-10,30,,"Derived annual inflation (v_annual_summary), %. Freshness follows HICP_INDEX."
+HOUSE_PRICE_INDEX,20,600,6,"Index 2015 = 100. Quarterly, published about T+3 months."
+UNEMPLOYMENT_RATE,0,40,3,"% of labour force. Monthly."
+GDP_PC_PPS,3000,200000,15,"PPS per inhabitant. Annual, first estimate about T+3 months."

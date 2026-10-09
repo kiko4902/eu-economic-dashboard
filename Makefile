@@ -13,10 +13,10 @@ endif
 
 VENV_PY := $(VENV_BIN)/python
 
-.PHONY: help up down install db-shell pipeline extract warehouse transform reconcile analytics test lint
+.PHONY: help up down install db-shell pipeline extract warehouse transform reconcile analytics quality test lint
 
 help:
-	@echo "Targets: up down install db-shell pipeline extract warehouse transform reconcile analytics test lint"
+	@echo "Targets: up down install db-shell pipeline extract warehouse transform reconcile analytics quality test lint"
 
 up:  ## Start PostgreSQL and wait until it is healthy
 	docker compose up -d --wait
@@ -32,7 +32,7 @@ install:  ## Create .venv and install the package with dev dependencies
 db-shell:  ## Open psql inside the DB container
 	docker compose exec db psql -U $(POSTGRES_USER) -d $(POSTGRES_DB)
 
-pipeline:  ## Full ETL: extract -> warehouse -> transform -> reconciliation -> analytics
+pipeline:  ## Full ETL: extract -> warehouse -> transform -> analytics -> quality checks
 	$(VENV_PY) -m pipeline.run
 
 extract:  ## Download Eurostat datasets into the raw schema
@@ -43,12 +43,15 @@ warehouse:  ## Create warehouse tables and populate dimensions
 
 transform:  ## Load the fact table from raw, then reconcile raw vs fact row counts
 	$(VENV_PY) -m pipeline.transform
-	$(VENV_PY) -m pipeline.quality
+	$(VENV_PY) -m pipeline.quality reconciliation
 
 analytics:  ## Create the analytics views and the read-only Power BI role
 	$(VENV_PY) -m pipeline.analytics
 
 reconcile:  ## Reconcile raw vs fact row counts (every difference must have a skip reason)
+	$(VENV_PY) -m pipeline.quality reconciliation
+
+quality:  ## All data quality checks; results in quality.check_run / quality.check_result
 	$(VENV_PY) -m pipeline.quality
 
 test:

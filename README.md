@@ -1,5 +1,7 @@
 # EU Economic Dashboard
 
+[![CI](https://github.com/kiko4902/eu-economic-dashboard/actions/workflows/ci.yml/badge.svg)](https://github.com/kiko4902/eu-economic-dashboard/actions/workflows/ci.yml)
+
 **Has life in Croatia (and the EU) become more or less affordable since 2010?**
 
 An ETL pipeline from the Eurostat API into a PostgreSQL star schema, with a Power BI report on top.

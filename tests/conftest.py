@@ -1,5 +1,10 @@
-"""Shared fixtures. Database tests run in a transaction that is always rolled back."""
+"""Shared fixtures. Database tests run in a transaction that is always rolled back.
 
+Without a reachable database the database tests are skipped, unless REQUIRE_DB=1 is set (as in
+CI): then they fail, so a broken database setup can never pass silently.
+"""
+
+import os
 from collections.abc import Iterator
 
 import pytest
@@ -7,7 +12,7 @@ from sqlalchemy import Connection, Engine
 from sqlalchemy.exc import OperationalError
 
 from pipeline.analytics import create_reader_role, create_views
-from pipeline.db import execute_script, get_engine, sql_files
+from pipeline.db import ensure_schemas, execute_script, get_engine, sql_files
 from pipeline.warehouse import populate_warehouse
 
 
@@ -26,6 +31,8 @@ def database() -> Engine | str:
 @pytest.fixture
 def engine(database: Engine | str) -> Engine:
     if isinstance(database, str):
+        if os.getenv("REQUIRE_DB") == "1":
+            pytest.fail(f"REQUIRE_DB=1 but {database}", pytrace=False)
         pytest.skip(database)
     return database
 
@@ -37,6 +44,7 @@ def db(engine: Engine) -> Iterator[Connection]:
     with engine.connect() as conn:
         transaction = conn.begin()
         try:
+            ensure_schemas(conn)
             for path in sql_files("raw/tables"):
                 execute_script(conn, path)
             populate_warehouse(conn)

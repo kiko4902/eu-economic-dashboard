@@ -25,11 +25,12 @@ codes below were verified against the live API on **2026-10-09**.
 | `UNEMPLOYMENT_RATE` | `une_rt_m` | monthly | % of labour force | `raw.une_rt_m` |
 | `GDP_PC_PPS` | `nama_10_pc` | annual | PPS (EU27_2020) per inhabitant | `raw.nama_10_pc` |
 
-Known gaps (expected, quality checks must not fail on them):
+Known gaps (expected, quality checks must not fail on them; the checks read them from
+`seeds/known_gaps.csv`):
 - **Greece** has no house price index (`prc_hpi_q`).
 - The **Netherlands** has no full-time adjusted salary (`nama_10_fte`).
 - **Net earnings** (`earn_nt_net`) start in **2013** for Croatia and the EU27_2020 aggregate, and in
-  **2014** for Cyprus (other countries from 2010).
+  **2014** for Cyprus (other countries from 2010); Cyprus also has no data for 2015 and 2016.
 
 ## Datasets
 

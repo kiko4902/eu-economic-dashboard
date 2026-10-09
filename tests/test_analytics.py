@@ -234,3 +234,19 @@ def test_reader_schema_privileges(db: Connection, schema: str, allowed: bool) ->
 
     assert db.execute(select(usage)).scalar_one() is allowed
     assert db.execute(select(create)).scalar_one() is False
+
+
+def test_inflation_ranks_by_distance_from_2_percent(db: Connection) -> None:
+    # 2023 averages 100 everywhere; 2024: HR +2.5 %, SI +1.0 %, PL -0.5 % (deflation), IT +6 %
+    rows = []
+    for geo, level_2024 in [("HR", "102.5"), ("SI", "101"), ("PL", "99.5"), ("IT", "106")]:
+        rows += months(geo, 2023, "100") + months(geo, 2024, level_2024)
+    load_and_transform(db, "HICP_INDEX", rows)
+
+    ranks = {
+        r["country_code"]: r["country_rank"]
+        for r in view_rows(db, "v_country_rank", year=2024, indicator_code="HICP_INFLATION")
+    }
+
+    # distances from 2 %: HR 0.5, SI 1.0, PL 2.5, IT 4.0
+    assert ranks == {"HR": 1, "SI": 2, "PL": 3, "IT": 4}

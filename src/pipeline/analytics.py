@@ -11,7 +11,7 @@ import sys
 from sqlalchemy import Connection, Engine, text
 
 from pipeline import config
-from pipeline.db import execute_script, get_engine, read_sql, sql_files
+from pipeline.db import ensure_schemas, execute_script, get_engine, read_sql, sql_files
 from pipeline.logs import configure_logging
 
 logger = logging.getLogger(__name__)
@@ -25,6 +25,7 @@ def view_names() -> list[str]:
 
 
 def create_views(conn: Connection) -> None:
+    ensure_schemas(conn)
     for path in sql_files("analytics"):
         logger.info("Creating view %s", path.stem.split("_", 1)[1])
         execute_script(conn, path)

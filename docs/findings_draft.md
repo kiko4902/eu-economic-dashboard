@@ -57,12 +57,48 @@ ORDER BY year;
 
 Croatian annual inflation was **10.7 % in 2022 and 8.4 % in 2023** (EU: 9.2 % and 6.4 %).
 Over 2010–2025, consumer prices rose **48.9 % in Croatia** vs **42.8 % in the EU**. In 2024
-Croatia had the 3rd-highest inflation among the 27 member states (rank 25 of 27, lower is
-better).
+Croatian inflation (4.0 %) was the 3rd-furthest from the ECB's 2 % target among the 27 member
+states (rank 25 of 27; `v_country_rank` ranks inflation by distance from 2 %).
 
 Yet Croatian nominal wages rose **12.4 % (2022) and 13.4 % (2023)**, so real wages grew
 **+1.6 % and +4.6 %**. EU real wages fell **−3.7 % and −0.2 %**, as did Slovenia's in 2022
 (−3.5 %) and Italy's in both years (−4.7 %, −3.2 %).
+
+**Why this differs from the official Croatian figure for 2022.** The Croatian Bureau of
+Statistics (DZS) reported a real decline for 2022. For January–December 2022:
+- average gross wage: 10,400 kn, **+8.3 % nominal, −2.3 % real**
+- average net wage: 7,653 kn, +7.4 % nominal, −3.1 % real
+
+([DZS release RAD-2022-1-1/12](https://podaci.dzs.hr/media/x5gihzk1/rad-2022-1-1_12-prosječne-mjesečne-neto-i-bruto-plaće-zaposlenih-u-2022.pdf),
+20 Feb 2023). Our +1.6 % is still correct for what it measures. The difference is in the
+nominal wage growth, +12.4 % vs +8.3 %, not in the deflator: the price deflator implied by DZS's
+figures is 10.8 % (1.083 / 0.977), and our HICP inflation is 10.7 %.
+
+`nama_10_fte` is a national-accounts measure. Eurostat's own components for Croatia reproduce
+its growth:
+
+| HR, 2022 vs 2021 | Growth |
+|---|---|
+| Wages and salaries, D.11 (`nama_10_gdp`), €23,185m → €26,557m | +14.5 % |
+| Employees, headcount (`nama_10_a10_e`), 1,356,800 → 1,381,810 | +1.8 % |
+| D.11 per employee | **+12.5 %** |
+| `nama_10_fte` (FTE-adjusted) | **+12.4 %** |
+
+The FTE adjustment changed almost nothing in 2022. So the gap to DZS comes from the source
+statistics, not from our pipeline. The likely reasons are:
+- **Coverage:** DZS covers employees *in legal entities* only, based on JOPPD tax forms.
+  National accounts cover all employees in the economy, including those of sole proprietors
+  and crafts, and estimates for undeclared work.
+- **Concept:** national-accounts wages and salaries (ESA 2010 D.11) include all cash and
+  in-kind remuneration, bonuses and irregular payments. The DZS release reports non-taxable
+  receipts separately (table 4); they appear to be outside its average wage (not confirmed).
+- **Composition:** the national-accounts average is total wages divided by all employees, so
+  it also reflects changes in who is employed.
+
+We have not quantified how much each reason contributes. The conclusion: by the survey/tax-
+based DZS measure, the average wage fell in real terms in 2022. By the national-accounts
+measure, used here because it is consistent across the EU, total pay per employee kept slightly
+ahead of prices.
 
 ```sql
 SELECT country_code, year,
@@ -187,11 +223,37 @@ ORDER BY real_change_pct DESC;
 
 ---
 
+## Why real wages can rise while housing gets less affordable
+
+Real wages here are deflated with the HICP, and the **HICP does not include owner-occupied
+housing**: neither the cost of living in one's own home nor the purchase price of dwellings.
+Eurostat's 2023 report on the topic states (foreword and paragraph 1): "From the outset, the
+costs of households to live in their own home – i.e. owner-occupied housing (OOH) – have been
+excluded from the coverage of the HICP".
+
+Purchases of dwellings are treated as investment, not consumption. Paragraph 5 of the same
+report notes that including them (the "net acquisitions approach") would cover "investment
+expenditures that are beyond the definition of household consumption in national accounts,
+which is also a foundation of the HICP". Imputed rents for owner-occupiers are also outside
+the HICP. The HICP metadata lists "imputed rentals for housing" (from 2026 "imputed rental
+payments for housing", ECOICOP 04.2) under products not covered.
+
+Sources:
+- Eurostat (2023), *Owner-occupied housing and the harmonised index of consumer prices*,
+  [KS-TC-23-001](https://ec.europa.eu/eurostat/documents/3888793/16999608/KS-TC-23-001-EN-N.pdf)
+- [HICP reference metadata (prc_hicp_esms)](https://ec.europa.eu/eurostat/cache/metadata/en/prc_hicp_esms.htm),
+  section 3.2
+- [Statistics Explained: HICP methodology](https://ec.europa.eu/eurostat/statistics-explained/index.php?title=HICP_methodology)
+
+So a household's consumer basket can get cheaper relative to wages (findings 1, 2 and 6) while
+buying a home gets more expensive relative to wages (finding 3). Both can be true at once. The
+HICP does include housing costs that are actual consumer payments, such as rents paid by
+tenants.
+
 ## Caveats for the final write-up
 
 - Wages are **gross** average full-time adjusted salaries (national accounts), not take-home
-  pay. Real wages are deflated with the HICP, which covers consumer prices but **not owner-
-  occupied housing costs**. That is why housing is a separate finding.
+  pay. See finding 2 for how they differ from the DZS average wage.
 - The house price index measures purchase prices, not rents or mortgage costs (interest rates
   are not in the data).
 - Real wage growth uses national currency; Croatia's series is in euro for all years

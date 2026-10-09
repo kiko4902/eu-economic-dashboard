@@ -1,7 +1,7 @@
 """Pipeline entry point: python -m pipeline.run
 
-Runs extract -> warehouse (schema + dimensions) -> transform (fact table) -> reconciliation
--> analytics (views + Power BI role).
+Runs extract -> warehouse (schema + dimensions) -> transform (fact table) -> analytics (views +
+Power BI role) -> quality (checks incl. reconciliation; an error-severity failure fails the run).
 Each step runs only if the previous one succeeded.
 """
 
@@ -17,8 +17,8 @@ STEPS: tuple[tuple[str, Callable[[], int]], ...] = (
     ("extract", extract.main),
     ("warehouse", warehouse.main),
     ("transform", transform.main),
-    ("reconciliation", quality.main),
     ("analytics", analytics.main),
+    ("quality", lambda: quality.main([])),
 )
 
 

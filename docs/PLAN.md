@@ -101,7 +101,7 @@ eu-economic-dashboard/
 │   ├── init/                 # schema creation, run on DB start
 │   ├── warehouse/            # DDL for dimensions and facts
 │   ├── transform/            # raw → warehouse: one file per indicator + steps/
-│   ├── quality/              # data quality queries (reconciliation)
+│   ├── quality/              # quality checks, rule setup, result tables
 │   ├── roles/                # read-only Power BI role
 │   └── analytics/            # views, one file per view
 ├── src/
@@ -183,12 +183,24 @@ in `.env`): `SELECT` on `analytics` only, no access to `raw` or `warehouse`, rea
 
 ## 8. Data quality
 
-Implemented in `quality.py` and/or `tests/`:
-- no duplicate (country, period, indicator) rows
-- all EU-27 countries + EU aggregate present for each indicator
-- values within plausible ranges (e.g. unemployment 0–40 %, inflation −10 to +30 %)
-- no gaps longer than N periods without explanation
-- every pipeline run writes a row to `raw.load_log` (dataset, rows loaded, started_at, finished_at, status)
+Implemented in `quality.py` (`make quality`, also the last step of `make pipeline`). Every check
+has a severity: **error** fails the run (and the pipeline / CI), **warning** is only logged.
+Results are written per run to `quality.check_run` and `quality.check_result`.
+
+| Check | Severity | What it verifies |
+|---|---|---|
+| `load_status` | error | the latest extract of every dataset succeeded (`raw.load_log`) |
+| `reconciliation` | error | raw rows = fact rows + rows skipped for a documented reason |
+| `completeness` | error | every EU-27 country + EU27_2020 has every indicator, from its start year |
+| `missing_periods` | error | no missing periods inside a country's series |
+| `value_range` | error | values within plausible ranges (e.g. unemployment 0–40 %, annual inflation −10 to +30 %) |
+| `known_gaps_current` | warning | documented known gaps still match the data (flags stale exceptions) |
+| `freshness` | warning | latest period per indicator not older than expected |
+
+- Exceptions live in one place, `seeds/known_gaps.csv` (Greece house prices, Netherlands wages,
+  net earnings start years and Cyprus 2015–2016); ranges and freshness limits in
+  `seeds/quality_rules.csv`. The checks contain no hard-coded countries or indicators.
+- Duplicate (country, period, indicator) rows are impossible by the fact table's primary key.
 
 ## 9. Power BI report
 
@@ -207,9 +219,15 @@ Export: `.pbix` and PDF committed in `powerbi/`, screenshots in `docs/images/`.
 ## 10. DevOps
 
 - `docker compose up -d` starts PostgreSQL with schemas created by `sql/init/`
-- Makefile targets: `up`, `down`, `install`, `pipeline` (full ETL), `extract`, `warehouse`, `transform`, `reconcile`, `analytics`, `test`, `lint`, `db-shell`
-- GitHub Actions on push/PR: install deps, lint (`ruff`), run tests against a Postgres service container, run the pipeline on a small subset
-- Optional later: hosted Postgres (e.g. Neon free tier) + scheduled monthly refresh workflow
+- Makefile targets: `up`, `down`, `install`, `pipeline` (full ETL), `extract`, `warehouse`, `transform`, `reconcile`, `analytics`, `quality`, `test`, `lint`, `db-shell`
+- GitHub Actions (`.github/workflows/`):
+  - `ci.yml` on push and pull request: job 1 lint + unit tests; job 2 with a Postgres 16 service
+    container runs the full pipeline against the live Eurostat API, then all tests with
+    `REQUIRE_DB=1` (database tests fail instead of skipping) and the quality checks. pip cache.
+  - `scheduled.yml` weekly (Monday 05:00 UTC) + manual trigger: full pipeline and quality checks
+    to detect upstream changes (renamed datasets, new gaps); logs kept as an artifact.
+- The pipeline creates its schemas itself (`sql/init`), so it runs on any empty Postgres.
+- Optional later: hosted Postgres (e.g. Neon free tier) for a refreshed Power BI source
 
 ## 11. README must contain
 

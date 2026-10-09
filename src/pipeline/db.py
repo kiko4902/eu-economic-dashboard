@@ -42,6 +42,16 @@ def sql_files(relative_dir: str) -> list[Path]:
     return sorted((SQL_DIR / relative_dir).glob("*.sql"))
 
 
+def ensure_schemas(conn: Connection) -> None:
+    """Create the raw / warehouse / analytics schemas if missing (sql/init, idempotent).
+
+    Docker runs sql/init on a new volume; this makes the pipeline work on any empty database
+    too, e.g. the Postgres service container in CI.
+    """
+    for path in sql_files("init"):
+        execute_script(conn, path)
+
+
 def execute_script(conn: Connection, path: Path) -> None:
     """Run a whole .sql file (DDL, comments) on the connection's current transaction.
 
