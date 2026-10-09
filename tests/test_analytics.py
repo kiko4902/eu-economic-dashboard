@@ -319,3 +319,17 @@ def test_quality_views_show_the_latest_run(db: Connection) -> None:
     assert ("HOUSE_PRICE_INDEX", "EL", "No data at all") in {
         (g["indicator_code"], g["country_code"], g["gap_description"]) for g in gaps
     }
+
+
+def test_bi_dimension_columns_have_concrete_types(db: Connection) -> None:
+    """Reflection must not warn about an unknown type (e.g. bpchar without length)."""
+    import warnings
+
+    from sqlalchemy.exc import SAWarning
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", SAWarning)
+        for view in ("bi_dim_country", "bi_dim_year", "bi_dim_indicator"):
+            Table(view, MetaData(), schema="analytics", autoload_with=db)
+    frequency = Table("bi_dim_indicator", MetaData(), schema="analytics", autoload_with=db)
+    assert str(frequency.c.frequency.type) == "CHAR(1)"
