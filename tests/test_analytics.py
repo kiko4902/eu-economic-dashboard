@@ -9,7 +9,7 @@ from collections.abc import Mapping
 from typing import Any
 
 import pytest
-from sqlalchemy import Connection, MetaData, Table, func, select, table
+from sqlalchemy import Connection, MetaData, Table, column, func, select, table
 from sqlalchemy.exc import ProgrammingError
 
 from db_helpers import load_and_transform, months, run_test_sql
@@ -43,7 +43,9 @@ def test_view_files_are_in_dependency_order() -> None:
     assert names.index("v_annual_summary") < names.index("v_yoy_change")
     assert names.index("v_annual_summary") < names.index("v_real_wage_growth")
     assert names.index("v_index_base_2015") < names.index("v_housing_affordability")
-    assert names[-1] == "v_country_rank"  # reads v_real_wage_growth and v_housing_affordability
+    assert names.index("v_real_wage_growth") < names.index("v_country_rank")
+    assert names.index("v_housing_affordability") < names.index("v_country_rank")
+    assert names.index("v_annual_summary") < names.index("bi_dim_year")
 
 
 # --- complete-year rule and flags -----------------------------------------------------------
@@ -218,7 +220,11 @@ def test_reader_can_select_analytics_only(db: Connection) -> None:
     for view in view_names():
         db.execute(select(func.count()).select_from(table(view, schema="analytics")))
 
-    for schema, relation in [("warehouse", "fact_observation"), ("raw", "load_log")]:
+    for schema, relation in [
+        ("warehouse", "fact_observation"),
+        ("raw", "load_log"),
+        ("quality", "check_result"),
+    ]:
         with pytest.raises(ProgrammingError, match="permission denied"):
             with db.begin_nested():
                 db.execute(select(func.count()).select_from(table(relation, schema=schema)))
@@ -226,7 +232,8 @@ def test_reader_can_select_analytics_only(db: Connection) -> None:
 
 
 @pytest.mark.parametrize(
-    ("schema", "allowed"), [("analytics", True), ("warehouse", False), ("raw", False)]
+    ("schema", "allowed"),
+    [("analytics", True), ("warehouse", False), ("raw", False), ("quality", False)],
 )
 def test_reader_schema_privileges(db: Connection, schema: str, allowed: bool) -> None:
     usage = func.has_schema_privilege("powerbi_reader", schema, "USAGE")
@@ -250,3 +257,65 @@ def test_inflation_ranks_by_distance_from_2_percent(db: Connection) -> None:
 
     # distances from 2 %: HR 0.5, SI 1.0, PL 2.5, IT 4.0
     assert ranks == {"HR": 1, "SI": 2, "PL": 3, "IT": 4}
+
+
+# --- Power BI dimensions and quality views ---------------------------------------------------
+
+COUNTRY_COLUMNS = ("country_code", "country_name", "sort_order", "highlight_colour")
+
+
+def all_rows(conn: Connection, view: str, *columns: str) -> list[Mapping[str, Any]]:
+    """The given columns of every row of analytics.<view> (no reflection of the whole view)."""
+    t = table(view, *(column(c) for c in columns), schema="analytics")
+    return [dict(row._mapping) for row in conn.execute(select(t))]
+
+
+def test_bi_dim_country_puts_croatia_and_eu_first(db: Connection) -> None:
+    rows = sorted(all_rows(db, "bi_dim_country", *COUNTRY_COLUMNS), key=lambda r: r["sort_order"])
+
+    assert [r["country_code"] for r in rows[:2]] == ["HR", "EU27_2020"]
+    assert [r["sort_order"] for r in rows] == list(range(1, 29))
+    assert len({r["country_code"] for r in rows}) == 28
+    others = [r["country_name"] for r in rows[2:]]
+    assert others == sorted(others)
+    assert {r["country_code"]: r["highlight_colour"] for r in rows[:2]} == {
+        "HR": "#C8102E",
+        "EU27_2020": "#1F4E9E",
+    }
+
+
+def test_bi_dimensions_cover_every_key_in_the_fact_views(db: Connection) -> None:
+    countries = {r["country_code"] for r in all_rows(db, "bi_dim_country", "country_code")}
+    years = {r["year"] for r in all_rows(db, "bi_dim_year", "year")}
+    indicators = {r["indicator_code"] for r in all_rows(db, "bi_dim_indicator", "indicator_code")}
+
+    assert len(indicators) == len(all_rows(db, "bi_dim_indicator", "indicator_code"))  # unique
+    assert years == set(range(min(years), max(years) + 1))  # no missing years
+    for view in ("v_observations", "v_annual_summary", "v_country_rank"):
+        rows = all_rows(db, view, "country_code", "indicator_code", "year")
+        assert {r["country_code"] for r in rows} <= countries, view
+        assert {r["indicator_code"] for r in rows} <= indicators, view
+        assert {r["year"] for r in rows} <= years, view
+    gaps = all_rows(db, "v_known_gaps", "country_code", "indicator_code")
+    assert {r["country_code"] for r in gaps} <= countries
+    assert {r["indicator_code"] for r in gaps} <= indicators
+
+
+def test_quality_views_show_the_latest_run(db: Connection) -> None:
+    from datetime import UTC, datetime
+
+    from pipeline.quality import run_checks, save_results
+
+    run_id = save_results(db, run_checks(db, ["value_range"]), datetime.now(UTC))
+
+    latest = all_rows(db, "v_quality_latest", "run_id", "check_name")
+    gaps = all_rows(
+        db, "v_known_gaps", "run_id", "indicator_code", "country_code", "gap_description"
+    )
+
+    assert {r["run_id"] for r in latest} == {run_id}
+    assert {r["check_name"] for r in latest} == {"value_range"}
+    assert {r["run_id"] for r in gaps} == {run_id}
+    assert ("HOUSE_PRICE_INDEX", "EL", "No data at all") in {
+        (g["indicator_code"], g["country_code"], g["gap_description"]) for g in gaps
+    }

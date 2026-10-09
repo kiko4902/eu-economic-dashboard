@@ -26,6 +26,9 @@ def view_names() -> list[str]:
 
 def create_views(conn: Connection) -> None:
     ensure_schemas(conn)
+    # v_quality_latest / v_known_gaps read the quality tables, which the quality step (later in
+    # the pipeline) fills; create them here so the views also build on an empty database.
+    execute_script(conn, config.SQL_DIR / "quality" / "tables" / "quality_log.sql")
     for path in sql_files("analytics"):
         logger.info("Creating view %s", path.stem.split("_", 1)[1])
         execute_script(conn, path)

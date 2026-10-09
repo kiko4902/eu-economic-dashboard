@@ -178,6 +178,13 @@ Views:
   relative to wages). `WAGE_NAC` and the index levels are not ranked (not comparable across
   countries).
 
+Power BI support (Phase 6):
+- `bi_dim_country`, `bi_dim_year`, `bi_dim_indicator` – dimension views for a star model in
+  Power BI; every analytics view keys on `country_code`, `year` and/or `indicator_code`, so
+  relationships are one-to-many from these dimensions (Croatia and EU27_2020 sort first)
+- `v_quality_latest`, `v_known_gaps` – latest data quality run and the documented known gaps,
+  for the data quality page (the reader role has no access to the `quality` schema itself)
+
 Access: Power BI connects as the read-only role `powerbi_reader` (password `POWERBI_READER_PASSWORD`
 in `.env`): `SELECT` on `analytics` only, no access to `raw` or `warehouse`, read-only sessions.
 
@@ -204,13 +211,19 @@ Results are written per run to `quality.check_run` and `quality.check_result`.
 
 ## 9. Power BI report
 
-Connect to PostgreSQL (`analytics` schema). Four pages:
-1. **Overview** – KPI cards for Croatia vs EU (latest values + change since 2010), 3–4 key findings as text
-2. **Croatia vs EU** – line charts over time for all indicators
-3. **Country comparison** – map of Europe, ranking table, year slicer
-4. **Housing** – house prices vs earnings, affordability over time
+Built by hand in Power BI Desktop, following **`docs/powerbi_guide.md`** (connection, which views
+to import, relationships, DAX measures, page layouts, numbers to check). Theme:
+`powerbi/theme.json` (Croatia red, EU27 blue in every visual).
 
-DAX measures: latest value, YoY %, change since base year, real wage growth.
+Connect to PostgreSQL (`analytics` schema) as `powerbi_reader`, Import mode. Five pages:
+1. **Overview** – KPI cards for Croatia vs EU (latest values + change since 2010), 3–4 key findings as text
+2. **Croatia vs EU** – line charts over time for all indicators, real wage growth
+3. **Country comparison** – map of Europe, ranking table, GDP vs EU, year slicer
+4. **Housing** – house prices vs earnings, affordability over time
+5. **Data quality** – latest quality run results and known data gaps
+
+DAX measures: latest value, YoY %, change since base year, real wage growth, cumulative real
+wage index, housing affordability ratio, Croatia vs EU gap (all from `v_annual_summary`).
 Synced slicers for country and period across pages. Consistent colour for Croatia and EU across all visuals.
 
 Export: `.pbix` and PDF committed in `powerbi/`, screenshots in `docs/images/`.
@@ -267,7 +280,7 @@ Checks from section 8, pytest tests, ruff, GitHub Actions workflow.
 
 ### Phase 6 – Power BI
 Report from section 9 (built manually in Power BI Desktop; Claude Code can help with DAX measures and checking the views).
-**Done when:** 4 pages finished, `.pbix` + PDF + screenshots committed.
+**Done when:** 5 pages finished (incl. data quality), `.pbix` + PDF + screenshots committed.
 
 ### Phase 7 – Documentation
 Diagrams, findings, final README.

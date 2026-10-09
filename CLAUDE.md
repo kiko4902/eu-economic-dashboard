@@ -32,8 +32,9 @@ sql/roles/       read-only powerbi_reader role (SELECT on analytics only)
 src/pipeline/    config, db, extract, warehouse, transform, analytics, quality, reconciliation, run
 tests/           pytest (fixtures/ API samples, db_helpers.py, sql/); no network in tests
 .github/         workflows: ci.yml (push/PR), scheduled.yml (weekly + manual)
-powerbi/         .pbix + PDF export (committed)
-docs/            PLAN.md, data_sources.md, findings_draft.md, SETUP_NOTES.md, images/ (er_diagram.md)
+powerbi/         theme.json; .pbix + PDF export (committed, built by hand)
+docs/            PLAN.md, data_sources.md, findings_draft.md, powerbi_guide.md, SETUP_NOTES.md,
+                 images/ (er_diagram.md)
 ```
 
 ## Conventions
@@ -89,5 +90,6 @@ Work one phase at a time. Do not start a phase until the previous one meets its
 - [x] Phase 3 – Transform
 - [x] Phase 4 – Analytics
 - [x] Phase 5 – Quality, tests, CI
-- [ ] Phase 6 – Power BI
+- [ ] Phase 6 – Power BI (preparation done: bi_dim_* and quality views, docs/powerbi_guide.md,
+      powerbi/theme.json; the report itself is built by hand in Power BI Desktop)
 - [ ] Phase 7 – Documentation

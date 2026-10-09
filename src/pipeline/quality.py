@@ -5,7 +5,8 @@ Each check finds issues per subject (indicator or dataset). Checks have a severi
   warning - issues are logged and recorded, the run still passes
 
 Rules and known gaps come from seeds/quality_rules.csv and seeds/known_gaps.csv (the only place
-where exceptions live). Results are written to quality.check_run / quality.check_result.
+where exceptions live). Results are written to quality.check_run / quality.check_result,
+together with the known gaps in force (quality.check_known_gap).
 
 Checks (in run order):
   load_status         latest extract of every dataset succeeded                 error
@@ -202,6 +203,10 @@ def save_results(conn: Connection, results: list[CheckResult], started_at: datet
         text(read_sql("quality/log/insert_run.sql")),
         {"started_at": started_at, "status": status, "errors": errors, "warnings": warnings},
     ).scalar_one()
+    conn.execute(
+        text(read_sql("quality/log/insert_known_gap.sql")),
+        [{"run_id": run_id, **gap} for gap in read_seed("known_gaps")],
+    )
     conn.execute(
         text(read_sql("quality/log/insert_result.sql")),
         [
