@@ -66,7 +66,7 @@ Open a new terminal (and restart VS Code / Claude Code) for these to take effect
    ```
    cp .env.example .env          # then set POSTGRES_PASSWORD
    rm -rf .venv
-   make install                  # uses python3.12 (uv shim in ~/.local/bin)
+   make install                  # uv sync --locked (Python 3.12 + versions from uv.lock)
    make up
    make db-shell                 # in psql: \dn  -> raw, warehouse, analytics
    ```

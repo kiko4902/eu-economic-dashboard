@@ -177,6 +177,20 @@ Single flags seen in the loaded data:
 | `e` | estimated |
 | `p` | provisional |
 
+## Inflation target used for ranking
+
+`analytics.v_country_rank` ranks annual inflation by its distance from **2 %**, the ECB's
+symmetric medium-term target for the euro area (closest = rank 1). This is a **documented
+simplification** for the non-euro member states with their own inflation targets:
+
+- **Poland**: 2.5 % (±1 pp), Narodowy Bank Polski
+- **Hungary**: 3 % (±1 pp), Magyar Nemzeti Bank
+- **Romania**: 2.5 % (±1 pp), Banca Națională a României
+
+Czechia and Sweden also target 2 %, and Denmark pegs its currency to the euro. Ranking every
+country against 2 % keeps the comparison uniform. A country inside its own national target
+band (e.g. Hungary at 3 %) can therefore rank lower than its central bank would judge it.
+
 ## Reference data for dimensions
 
 Seeded from `seeds/*.csv` into the `warehouse` schema (Phase 2).

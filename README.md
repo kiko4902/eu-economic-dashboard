@@ -26,7 +26,17 @@ _TODO (Phase 7)_
 
 ## How to run
 
-_TODO_
+_TODO (Phase 7)_
+
+### Updating dependencies
+
+Versions are pinned in `uv.lock` (installed with `make install`, used by CI). To upgrade:
+
+```
+make lock
+```
+
+This runs `uv lock --upgrade` and syncs `.venv`; then run `make lint test` and commit `uv.lock`.
 
 ## Data sources and licence
 

@@ -2,8 +2,8 @@
 -include .env
 export
 
-# Project targets Python 3.12 (override: make install PYTHON=/path/to/python3.12)
-PYTHON ?= python3.12
+# Dependencies are pinned in uv.lock (cross-platform); uv installs Python 3.12 if needed.
+UV ?= uv
 
 ifeq ($(OS),Windows_NT)
     VENV_BIN := .venv/Scripts
@@ -13,10 +13,10 @@ endif
 
 VENV_PY := $(VENV_BIN)/python
 
-.PHONY: help up down install db-shell pipeline extract warehouse transform reconcile analytics quality test lint
+.PHONY: help up down install lock db-shell pipeline extract warehouse transform reconcile analytics quality test lint
 
 help:
-	@echo "Targets: up down install db-shell pipeline extract warehouse transform reconcile analytics quality test lint"
+	@echo "Targets: up down install lock db-shell pipeline extract warehouse transform reconcile analytics quality test lint"
 
 up:  ## Start PostgreSQL and wait until it is healthy
 	docker compose up -d --wait
@@ -24,10 +24,12 @@ up:  ## Start PostgreSQL and wait until it is healthy
 down:  ## Stop PostgreSQL (data volume is kept)
 	docker compose down
 
-install:  ## Create .venv and install the package with dev dependencies
-	$(PYTHON) -m venv .venv
-	$(VENV_PY) -m pip install --upgrade pip
-	$(VENV_PY) -m pip install -e ".[dev]"
+install:  ## Create .venv with exactly the versions in uv.lock (fails if the lock is outdated)
+	$(UV) sync --locked --extra dev
+
+lock:  ## Upgrade all dependencies to their latest allowed versions and rewrite uv.lock
+	$(UV) lock --upgrade
+	$(UV) sync --locked --extra dev
 
 db-shell:  ## Open psql inside the DB container
 	docker compose exec db psql -U $(POSTGRES_USER) -d $(POSTGRES_DB)

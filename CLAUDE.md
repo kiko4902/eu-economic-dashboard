@@ -14,7 +14,7 @@ Final dataset choices are in `docs/data_sources.md` and supersede PLAN section 2
 
 ## Tech stack
 
-- Python 3.12 (pinned): pandas, requests / eurostat, SQLAlchemy, psycopg, python-dotenv, pytest, ruff
+- Python 3.12 (pinned), dependencies locked in uv.lock (uv): pandas, requests / eurostat, SQLAlchemy, psycopg, python-dotenv, pytest, ruff
 - PostgreSQL 16 in Docker (Docker Compose), Makefile
 - GitHub Actions CI, Power BI Desktop for the report
 
@@ -54,7 +54,8 @@ docs/            PLAN.md, data_sources.md, findings_draft.md, SETUP_NOTES.md, im
 ```
 make up          # start PostgreSQL (waits for healthcheck)
 make down        # stop PostgreSQL (volume kept)
-make install     # create .venv, install package + dev deps
+make install     # uv sync --locked: .venv with the exact versions in uv.lock
+make lock        # upgrade dependencies (uv lock --upgrade), then commit uv.lock
 make db-shell    # psql inside the container
 make pipeline    # full ETL: extract -> warehouse -> transform -> analytics -> quality
 make extract     # extract only
