@@ -13,10 +13,10 @@ endif
 
 VENV_PY := $(VENV_BIN)/python
 
-.PHONY: help up down install db-shell pipeline extract warehouse transform test lint
+.PHONY: help up down install db-shell pipeline extract warehouse transform reconcile test lint
 
 help:
-	@echo "Targets: up down install db-shell pipeline extract warehouse transform test lint"
+	@echo "Targets: up down install db-shell pipeline extract warehouse transform reconcile test lint"
 
 up:  ## Start PostgreSQL and wait until it is healthy
 	docker compose up -d --wait
@@ -32,7 +32,7 @@ install:  ## Create .venv and install the package with dev dependencies
 db-shell:  ## Open psql inside the DB container
 	docker compose exec db psql -U $(POSTGRES_USER) -d $(POSTGRES_DB)
 
-pipeline:  ## Full ETL: extract -> warehouse (transform added in Phase 3)
+pipeline:  ## Full ETL: extract -> warehouse -> transform -> reconciliation
 	$(VENV_PY) -m pipeline.run
 
 extract:  ## Download Eurostat datasets into the raw schema
@@ -41,8 +41,12 @@ extract:  ## Download Eurostat datasets into the raw schema
 warehouse:  ## Create warehouse tables and populate dimensions
 	$(VENV_PY) -m pipeline.warehouse
 
-transform:
-	@echo "transform: not implemented yet (Phase 3)"
+transform:  ## Load the fact table from raw, then reconcile raw vs fact row counts
+	$(VENV_PY) -m pipeline.transform
+	$(VENV_PY) -m pipeline.quality
+
+reconcile:  ## Reconcile raw vs fact row counts (every difference must have a skip reason)
+	$(VENV_PY) -m pipeline.quality
 
 test:
 	$(VENV_PY) -m pytest

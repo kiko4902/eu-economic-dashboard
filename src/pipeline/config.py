@@ -63,13 +63,15 @@ GEO_SCOPE = EU27_COUNTRIES | {EU_AGGREGATE}
 class Dataset:
     """One Eurostat dataset loaded into raw.<code>.
 
-    Adding a dataset: add an entry to DATASETS and a matching DDL file sql/raw/tables/<code>.sql.
+    Adding a dataset: add an entry to DATASETS, a matching DDL file sql/raw/tables/<code>.sql,
+    and one sql/transform/NN_<indicator>.sql file per indicator built from it.
     """
 
     code: str  # Eurostat dataset code, also the raw table name
-    indicator_code: str  # our own short code, used later in warehouse.dim_indicator
+    indicator_codes: tuple[str, ...]  # our indicators built from it (warehouse.dim_indicator)
     dimensions: tuple[str, ...]  # all dimension columns in the SDMX-CSV response
-    filters: Mapping[str, str] = field(default_factory=dict)  # dimension -> code (server-side)
+    # dimension -> code(s), filtered server-side; "A,B" selects several codes
+    filters: Mapping[str, str] = field(default_factory=dict)
 
     @property
     def table(self) -> str:
@@ -80,39 +82,40 @@ class Dataset:
 DATASETS: tuple[Dataset, ...] = (
     Dataset(
         code="earn_nt_net",
-        indicator_code="NET_EARNINGS",
+        indicator_codes=("NET_EARNINGS",),
         dimensions=("freq", "currency", "estruct", "ecase", "geo"),
         filters={"freq": "A", "currency": "EUR", "estruct": "NET", "ecase": "P1_NCH_AW100"},
     ),
     Dataset(
         code="prc_hicp_minr",
-        indicator_code="HICP_ANNUAL_RATE",
+        indicator_codes=("HICP_ANNUAL_RATE", "HICP_INDEX"),
         dimensions=("freq", "unit", "coicop18", "geo"),
-        filters={"freq": "M", "unit": "RCH_A", "coicop18": "TOTAL"},
+        # RCH_A: annual rate of change; I25: index 2025 = 100 (annual inflation in Phase 4)
+        filters={"freq": "M", "unit": "RCH_A,I25", "coicop18": "TOTAL"},
     ),
     Dataset(
         code="prc_hpi_q",
-        indicator_code="HOUSE_PRICE_INDEX",
+        indicator_codes=("HOUSE_PRICE_INDEX",),
         dimensions=("freq", "purchase", "unit", "geo"),
         filters={"freq": "Q", "purchase": "TOTAL", "unit": "I15_Q"},
     ),
     Dataset(
         code="une_rt_m",
-        indicator_code="UNEMPLOYMENT_RATE",
+        indicator_codes=("UNEMPLOYMENT_RATE",),
         dimensions=("freq", "s_adj", "age", "unit", "sex", "geo"),
         filters={"freq": "M", "s_adj": "SA", "age": "TOTAL", "unit": "PC_ACT", "sex": "T"},
     ),
     Dataset(
         code="nama_10_pc",
-        indicator_code="GDP_PC_PPS",
+        indicator_codes=("GDP_PC_PPS",),
         dimensions=("freq", "unit", "na_item", "geo"),
         filters={"freq": "A", "unit": "CP_PPS_EU27_2020_HAB", "na_item": "B1GQ"},
     ),
     Dataset(
         code="nama_10_fte",
-        indicator_code="AVG_FTE_SALARY",
+        indicator_codes=("WAGE_NAC", "WAGE_EUR"),
         dimensions=("freq", "unit", "geo"),
-        # Both units are kept: EUR for level comparisons, NAC for growth in non-euro countries.
-        filters={"freq": "A"},
+        # NAC: national currency, basis for real wage growth; EUR: cross-country levels
+        filters={"freq": "A", "unit": "NAC,EUR"},
     ),
 )

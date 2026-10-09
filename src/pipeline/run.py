@@ -1,21 +1,31 @@
 """Pipeline entry point: python -m pipeline.run
 
-Runs extract -> warehouse (schema + dimensions). The fact load (transform) is added in Phase 3.
+Runs extract -> warehouse (schema + dimensions) -> transform (fact table) -> reconciliation.
+Each step runs only if the previous one succeeded.
 """
 
 import logging
 import sys
+from collections.abc import Callable
 
-from pipeline import extract, warehouse
+from pipeline import extract, quality, transform, warehouse
 
 logger = logging.getLogger(__name__)
 
+STEPS: tuple[tuple[str, Callable[[], int]], ...] = (
+    ("extract", extract.main),
+    ("warehouse", warehouse.main),
+    ("transform", transform.main),
+    ("reconciliation", quality.main),
+)
+
 
 def main() -> int:
-    if extract.main() != 0:
-        logger.error("Extract failed; warehouse step skipped")
-        return 1
-    return warehouse.main()
+    for name, step in STEPS:
+        if step() != 0:
+            logger.error("Pipeline stopped: %s failed", name)
+            return 1
+    return 0
 
 
 if __name__ == "__main__":

@@ -4,13 +4,14 @@ import re
 from pathlib import Path
 
 from sqlalchemy import URL, Connection, Engine, create_engine
+from sqlalchemy.exc import DBAPIError
 
 from pipeline.config import SQL_DIR, DbSettings, load_db_settings
 
 _IDENTIFIER = re.compile(r"^[a-z_][a-z0-9_]*$")
 
 
-def get_engine(settings: DbSettings | None = None) -> Engine:
+def get_engine(settings: DbSettings | None = None, connect_timeout: int = 10) -> Engine:
     settings = settings or load_db_settings()
     url = URL.create(
         "postgresql+psycopg",
@@ -20,7 +21,7 @@ def get_engine(settings: DbSettings | None = None) -> Engine:
         port=settings.port,
         database=settings.name,
     )
-    return create_engine(url, future=True)
+    return create_engine(url, future=True, connect_args={"connect_timeout": connect_timeout})
 
 
 def read_sql(relative_path: str, **identifiers: str) -> str:
@@ -51,3 +52,9 @@ def execute_script(conn: Connection, path: Path) -> None:
         cursor.execute(path.read_text(encoding="utf-8"))
     finally:
         cursor.close()
+
+
+def describe_error(exc: Exception, max_length: int = 1000) -> str:
+    """Short error text for logs: the driver error for DB failures, not the full statement."""
+    detail = exc.orig if isinstance(exc, DBAPIError) and exc.orig is not None else exc
+    return f"{type(detail).__name__}: {detail}"[:max_length]

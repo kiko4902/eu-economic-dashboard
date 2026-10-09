@@ -34,7 +34,7 @@ erDiagram
 
     dim_indicator {
         smallint indicator_key PK "surrogate, identity"
-        text indicator_code UK "e.g. AVG_FTE_SALARY"
+        text indicator_code UK "e.g. WAGE_NAC"
         text name
         text unit
         char1 frequency "A / Q / M, UK with indicator_key"

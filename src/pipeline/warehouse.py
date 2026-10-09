@@ -52,13 +52,18 @@ def row_counts(conn: Connection) -> dict[str, int]:
     }
 
 
+def populate_warehouse(conn: Connection) -> None:
+    """Create warehouse tables and functions and populate the dimensions (caller's transaction)."""
+    apply_ddl(conn)
+    for name in SEEDED_DIMENSIONS:
+        seed_dimension(conn, name)
+    populate_dim_time(conn)
+
+
 def build_warehouse(engine: Engine) -> dict[str, int]:
-    """Create warehouse tables and populate dimensions; return row counts per table."""
+    """Create and populate the warehouse in one transaction; return row counts per table."""
     with engine.begin() as conn:
-        apply_ddl(conn)
-        for name in SEEDED_DIMENSIONS:
-            seed_dimension(conn, name)
-        populate_dim_time(conn)
+        populate_warehouse(conn)
         return row_counts(conn)
 
 

@@ -18,11 +18,10 @@ from decimal import Decimal, InvalidOperation
 import pandas as pd
 import requests
 from sqlalchemy import Connection, Engine, MetaData, Table, insert, text
-from sqlalchemy.exc import DBAPIError
 
 from pipeline import config
 from pipeline.config import Dataset
-from pipeline.db import execute_script, get_engine, read_sql, sql_files
+from pipeline.db import describe_error, execute_script, get_engine, read_sql, sql_files
 from pipeline.logs import configure_logging
 
 logger = logging.getLogger(__name__)
@@ -197,12 +196,6 @@ def replace_dataset(conn: Connection, dataset: Dataset, df: pd.DataFrame, load_i
     return len(records)
 
 
-def _describe_error(exc: Exception, max_length: int = 1000) -> str:
-    """Short error text for logs: the driver error for DB failures, not the full statement."""
-    detail = exc.orig if isinstance(exc, DBAPIError) and exc.orig is not None else exc
-    return f"{type(detail).__name__}: {detail}"[:max_length]
-
-
 def _start_log(engine: Engine, dataset: Dataset) -> int:
     with engine.begin() as conn:
         result = conn.execute(text(read_sql("raw/load_log_start.sql")), {"dataset": dataset.code})
@@ -233,7 +226,7 @@ def extract_dataset(engine: Engine, dataset: Dataset, session: requests.Session)
         result = LoadResult(dataset.code, load_id, rows, "success")
         logger.info("%s: loaded %d rows", dataset.code, rows)
     except Exception as exc:  # noqa: BLE001 - every failure must be logged to raw.load_log
-        result = LoadResult(dataset.code, load_id, 0, "failed", _describe_error(exc))
+        result = LoadResult(dataset.code, load_id, 0, "failed", describe_error(exc))
         logger.error("%s: failed: %s", dataset.code, result.error_message)
     _finish_log(engine, result)
     return result

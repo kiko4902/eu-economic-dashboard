@@ -1,4 +1,4 @@
--- HICP, ECOICOP ver.2, monthly rates of change (Eurostat prc_hicp_minr).
+-- HICP, ECOICOP ver.2, monthly index (I25) and annual rate of change (RCH_A) (Eurostat prc_hicp_minr).
 -- Long format, exactly as received from the Eurostat SDMX-CSV API (filtered to scope).
 CREATE TABLE IF NOT EXISTS raw.prc_hicp_minr (
     freq         text    NOT NULL,

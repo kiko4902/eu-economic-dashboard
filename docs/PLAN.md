@@ -23,9 +23,9 @@ The project is a portfolio piece for a data role. It must demonstrate:
 
 | Indicator | Dataset code | Frequency | Notes |
 |---|---|---|---|
-| Average full-time adjusted salary (primary wage indicator, added in Phase 1) | `nama_10_fte` | annual | EUR and NAC; Netherlands not published |
+| Average full-time adjusted salary (primary wage indicator, added in Phase 1) | `nama_10_fte` | annual | two indicators: `WAGE_NAC` (national currency, basis for real wage growth) and `WAGE_EUR` (cross-country levels); Netherlands not published |
 | Net earnings (secondary, used up to 2023) | `earn_nt_net` | annual | single person without children, 100% of average earnings, EUR; series break from 2024 |
-| Inflation (HICP, annual rate) | `prc_hicp_minr` (replaces discontinued `prc_hicp_manr`) | monthly | all-items (`TOTAL`) |
+| Inflation (HICP) | `prc_hicp_minr` (replaces discontinued `prc_hicp_manr`) | monthly | all-items (`TOTAL`); two indicators: `HICP_INDEX` (index 2025 = 100, basis for annual inflation) and `HICP_ANNUAL_RATE` (annual rate of change) |
 | House price index | `prc_hpi_q` | quarterly | total, index 2015=100 |
 | Unemployment rate | `une_rt_m` | monthly | seasonally adjusted, total, % of labour force |
 | GDP per capita (PPS) | `nama_10_pc` | annual | |
@@ -63,6 +63,25 @@ Rules:
 - All SQL lives in `.sql` files, not as strings inside Python.
 - Configuration (DB credentials) comes from `.env`; `.env.example` is committed, `.env` is not.
 
+Transform (raw → `fact_observation`, Phase 3):
+- One file per indicator, `sql/transform/NN_<indicator>.sql`, selects the indicator's raw rows
+  with the filters from `docs/data_sources.md` into a staging table. Shared steps in
+  `sql/transform/steps/` do the rest, in one transaction per indicator:
+  - periods `2024` / `2024-Q1` / `2024-01` → `dim_time` key of the first day of the period
+    (`warehouse.period_start_date()`)
+  - geo → `dim_country.country_code` (Eurostat codes, `EL` for Greece)
+  - flag → `dim_flag` via `warehouse.normalize_flag()` (combined flags like `b,p` → `bp`)
+  - rows are skipped, and counted per reason, for: `null_value` (no value),
+    `out_of_scope` (period outside `dim_time`), `outside_validity` (year outside
+    `dim_indicator.valid_from_year` / `valid_to_year`, e.g. `NET_EARNINGS` after 2023)
+  - unknown geo, unknown flag, unparseable period or a period of the wrong frequency fail the
+    indicator loudly; nothing is dropped silently
+  - load: insert new rows, update changed ones, delete rows that left the source; unchanged
+    rows are not touched
+- Reconciliation (`quality.py`, `make reconcile`, also run by `make transform` / `make pipeline`):
+  per indicator, raw rows = fact rows + skipped rows; per dataset, raw rows = rows used by its
+  indicators + rows not used. Any unexplained difference fails.
+
 ## 5. Repository structure
 
 ```
@@ -81,7 +100,8 @@ eu-economic-dashboard/
 ├── sql/
 │   ├── init/                 # schema creation, run on DB start
 │   ├── warehouse/            # DDL for dimensions and facts
-│   ├── transform/            # raw → warehouse
+│   ├── transform/            # raw → warehouse: one file per indicator + steps/
+│   ├── quality/              # data quality queries (reconciliation)
 │   └── analytics/            # views
 ├── src/
 │   └── pipeline/
@@ -112,7 +132,7 @@ Every table and column has a `COMMENT`.
 - One row per month from 2010-01 to December of the current year; annual and quarterly observations map to the first day of their period. The fact table stores the frequency.
 
 **dim_indicator** (seeded from `seeds/dim_indicator.csv`; one row per indicator)
-- indicator_key (PK), indicator_code (unique, our own short code e.g. `AVG_FTE_SALARY`), name, unit, frequency (A/Q/M), source_dataset (Eurostat code), source_filters, description, notes (series breaks, known gaps), valid_from_year / valid_to_year (nullable; the fact load only keeps years in this range, e.g. `NET_EARNINGS` valid_to_year = 2023)
+- indicator_key (PK), indicator_code (unique, our own short code e.g. `WAGE_NAC`), name, unit, frequency (A/Q/M), source_dataset (Eurostat code), source_filters, description, notes (series breaks, known gaps), valid_from_year / valid_to_year (nullable; the fact load only keeps years in this range, e.g. `NET_EARNINGS` valid_to_year = 2023)
 
 **dim_flag** (seeded from `seeds/dim_flag.csv`)
 - flag_key (PK), flag_code (official Eurostat OBS_FLAG codelist incl. combinations such as `bp`; empty string = no flag), description, is_break / is_estimated / is_provisional (generated)
@@ -127,7 +147,10 @@ Every table and column has a `COMMENT`.
 
 - `v_observations` – flat, human-readable join of fact + all dimensions (main Power BI source)
 - `v_yoy_change` – year-over-year change per country and indicator (`LAG`)
-- `v_real_wage_growth` – nominal net earnings growth minus average annual inflation, per country/year
+- `v_real_wage_growth` – real wage growth per country/year, computed as `(1 + nominal wage growth) / (1 + annual inflation) − 1`, not as a simple difference:
+  - nominal wage growth: year-over-year change of `WAGE_NAC` (national currency, so no exchange-rate effects)
+  - annual inflation: from `HICP_INDEX` as annual average index / previous year's annual average index − 1 (only years with all 12 months), not the average of the 12 monthly annual rates; this reproduces Eurostat's official annual average rate (`prc_hicp_ainr`)
+  - net take-home pay (`NET_EARNINGS`) can be shown the same way for 2010–2023 only
 - `v_index_base_2015` – each indicator rebased to 2015 = 100 for cross-indicator comparison
 - `v_country_rank` – rank of countries per indicator per year (`RANK() OVER (PARTITION BY ...)`)
 - `v_housing_affordability` – house price index vs earnings index (both 2015 = 100)
@@ -159,7 +182,7 @@ Export: `.pbix` and PDF committed in `powerbi/`, screenshots in `docs/images/`.
 ## 10. DevOps
 
 - `docker compose up -d` starts PostgreSQL with schemas created by `sql/init/`
-- Makefile targets: `up`, `down`, `install`, `pipeline` (full ETL), `extract`, `transform`, `test`, `lint`, `db-shell`
+- Makefile targets: `up`, `down`, `install`, `pipeline` (full ETL), `extract`, `warehouse`, `transform`, `reconcile`, `test`, `lint`, `db-shell`
 - GitHub Actions on push/PR: install deps, lint (`ruff`), run tests against a Postgres service container, run the pipeline on a small subset
 - Optional later: hosted Postgres (e.g. Neon free tier) + scheduled monthly refresh workflow
 

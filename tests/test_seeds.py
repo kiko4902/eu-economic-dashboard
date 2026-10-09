@@ -69,22 +69,31 @@ def test_iso_codes_are_unique_and_greece_is_gr(countries: dict[str, dict[str, st
 # --- dim_indicator --------------------------------------------------------------------------
 
 
-def test_one_indicator_per_dataset(indicators: dict[str, dict[str, str]]) -> None:
-    assert len(indicators) == 6
-    assert {(d.indicator_code, d.code) for d in config.DATASETS} == {
+def test_indicators_match_dataset_config(indicators: dict[str, dict[str, str]]) -> None:
+    assert len(indicators) == 8
+    assert {(code, d.code) for d in config.DATASETS for code in d.indicator_codes} == {
         (code, row["source_dataset"]) for code, row in indicators.items()
     }
 
 
-def test_indicator_filters_include_extract_filters(
+def test_indicator_filters_are_within_extract_filters(
     indicators: dict[str, dict[str, str]],
 ) -> None:
+    """Every dimension the extract filters is pinned to one of its extracted codes."""
     for dataset in config.DATASETS:
-        row = indicators[dataset.indicator_code]
-        filters = dict(item.split("=") for item in row["source_filters"].split(", "))
+        for code in dataset.indicator_codes:
+            row = indicators[code]
+            filters = dict(item.split("=") for item in row["source_filters"].split(", "))
 
-        assert dataset.filters.items() <= filters.items(), dataset.code
-        assert row["frequency"] == filters["freq"]
+            for dimension, extracted in dataset.filters.items():
+                assert filters[dimension] in extracted.split(","), (code, dimension)
+            assert row["frequency"] == filters["freq"]
+
+
+def test_wages_split_by_currency(indicators: dict[str, dict[str, str]]) -> None:
+    assert "unit=NAC" in indicators["WAGE_NAC"]["source_filters"]
+    assert "unit=EUR" in indicators["WAGE_EUR"]["source_filters"]
+    assert "unit=I25" in indicators["HICP_INDEX"]["source_filters"]
 
 
 def test_net_earnings_cut_off_at_2023(indicators: dict[str, dict[str, str]]) -> None:
@@ -97,7 +106,8 @@ def test_net_earnings_cut_off_at_2023(indicators: dict[str, dict[str, str]]) -> 
 
 def test_known_gaps_are_documented(indicators: dict[str, dict[str, str]]) -> None:
     assert "Greece" in indicators["HOUSE_PRICE_INDEX"]["notes"]
-    assert "Netherlands" in indicators["AVG_FTE_SALARY"]["notes"]
+    assert "Netherlands" in indicators["WAGE_NAC"]["notes"]
+    assert "Netherlands" in indicators["WAGE_EUR"]["notes"]
 
 
 # --- dim_flag -------------------------------------------------------------------------------

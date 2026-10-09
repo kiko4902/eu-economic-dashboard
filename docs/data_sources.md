@@ -16,9 +16,11 @@ codes below were verified against the live API on **2026-10-09**.
 
 | Indicator (our code) | Dataset | Frequency | Unit | Raw table |
 |---|---|---|---|---|
-| `AVG_FTE_SALARY` (**primary wage indicator**) | `nama_10_fte` | annual | EUR (and NAC) per employee per year | `raw.nama_10_fte` |
+| `WAGE_NAC` (**primary wage indicator**, basis for real wage growth) | `nama_10_fte` | annual | national currency per employee per year | `raw.nama_10_fte` |
+| `WAGE_EUR` (wage levels across countries) | `nama_10_fte` | annual | EUR per employee per year | `raw.nama_10_fte` |
 | `NET_EARNINGS` (secondary, **2010–2023 only**) | `earn_nt_net` | annual | EUR per year | `raw.earn_nt_net` |
-| `HICP_ANNUAL_RATE` | `prc_hicp_minr` (replaces `prc_hicp_manr`) | monthly | % change on same month of previous year | `raw.prc_hicp_minr` |
+| `HICP_INDEX` (basis for annual inflation) | `prc_hicp_minr` (replaces `prc_hicp_manr`) | monthly | index, 2025 = 100 | `raw.prc_hicp_minr` |
+| `HICP_ANNUAL_RATE` | `prc_hicp_minr` | monthly | % change on same month of previous year | `raw.prc_hicp_minr` |
 | `HOUSE_PRICE_INDEX` | `prc_hpi_q` | quarterly | index, 2015 = 100 | `raw.prc_hpi_q` |
 | `UNEMPLOYMENT_RATE` | `une_rt_m` | monthly | % of labour force | `raw.une_rt_m` |
 | `GDP_PC_PPS` | `nama_10_pc` | annual | PPS (EU27_2020) per inhabitant | `raw.nama_10_pc` |
@@ -39,10 +41,14 @@ index (`prc_hpi_q`); the **Netherlands** has no full-time adjusted salary (`nama
 - **Frequency / unit:** annual / EUR and national currency (`NAC`).
 - **Filters:**
   - `freq=A`: the only frequency.
-  - `unit`: **not filtered, both kept**. `EUR` is used for comparing levels between countries.
-    For growth in non-euro countries, growth in EUR includes exchange-rate movements, so `NAC`
-    is the right basis for real wage growth (nominal growth − HICP inflation). Which unit feeds
-    which view is decided in Phases 3–4.
+  - `unit=NAC,EUR`: both units are extracted and split into **two indicators**:
+    - **`WAGE_NAC`** (`unit=NAC`): basis for nominal and **real wage growth**. Growth in EUR
+      would include exchange-rate movements for non-euro countries (PL, HU, CZ, RO, SE, DK,
+      and BG before 2026). NAC levels are in different currencies, so use them for growth
+      only. Countries that adopted the euro are shown in euro for all years, converted at
+      the irrevocable rate (HR: NAC equals EUR from 2023; 2010 is 14,099 NAC vs 14,573 EUR
+      at the market rate). BG is still in lev in the current release.
+    - **`WAGE_EUR`** (`unit=EUR`): for **comparing wage levels** between countries.
 - **Coverage:** 26 member states + `EU27_2020`, 2010–2024 (released annually in autumn,
   about T+9 months, so 2025 is expected shortly). No observation flags in the data.
 - ⚠️ **Netherlands excluded by Eurostat:** Statistics Netherlands uses a different,
@@ -81,7 +87,7 @@ index (`prc_hpi_q`); the **Netherlands** has no full-time adjusted salary (`nama
 
 - **Title:** Harmonised index of consumer prices (HICP) - ECOICOP ver.2 - indices and rates of change, monthly data
 - **URL:** https://ec.europa.eu/eurostat/databrowser/view/prc_hicp_minr/default/table?lang=en
-- **Frequency / unit:** monthly / annual rate of change (%)
+- **Frequency / unit:** monthly / index (2025 = 100) and annual rate of change (%)
 - **Why not `prc_hicp_manr` (the plan's choice):** it is discontinued. Its title is now "HICP -
   monthly data (annual rate of change) (1997-2025)" and its last update was 2026-02-06, with
   data ending 2025-12. Eurostat moved HICP to the ECOICOP ver.2 classification in 2026 and
@@ -89,7 +95,22 @@ index (`prc_hpi_q`); the **Netherlands** has no full-time adjusted salary (`nama
   2000) and is updated monthly. Over 2010–2025 the two datasets agree: for HR 180 of 192
   months are identical and the rest differ by at most ±0.1 pp (EU27: 184 of 192).
 - **Filters:**
-  - `unit=RCH_A`: annual rate of change (same month of previous year), the headline inflation figure.
+  - `unit=RCH_A,I25`: both units are extracted and split into **two indicators**:
+    - **`HICP_INDEX`** (`unit=I25`, index 2025 = 100): basis for **annual inflation**,
+      computed in Phase 4 as annual average index / previous year's annual average index − 1.
+      This is how Eurostat computes its annual average rate: over 2011–2025 the index-derived
+      rate, rounded to 0.1, equals the official rate in the annual dataset `prc_hicp_ainr`
+      (`unit=RCH_A_AVG`) for **all 420** country-years checked (EU27 + EU27_2020).
+    - **`HICP_ANNUAL_RATE`** (`unit=RCH_A`): the headline monthly figure (change on the same
+      month of the previous year), for monthly charts.
+    - Why `I25` and not `I15` (2015 = 100, also in the dataset): 2025 = 100 is the base of
+      Eurostat's ECOICOP ver.2 HICP (the annual index in `prc_hicp_ainr` is 2025 = 100 too),
+      `I25` includes the latest flash estimate (one month more), and the rounded `I15` values
+      gave 9 of 420 annual rates that differ from the official ones by 0.1 pp. The base year
+      does not affect growth rates.
+    - Why not `prc_hicp_ainr` directly: it is annual only. The monthly index allows both
+      annual inflation and monthly/partial-year views from a single source; `prc_hicp_ainr`
+      remains a reference for spot checks.
   - `coicop18=TOTAL`: all-items HICP (the ECOICOP ver.2 equivalent of the old `CP00`).
 - **Coverage:** all 28 geos, 2010-01 to latest (2026-08/09).
 
@@ -134,6 +155,14 @@ index (`prc_hpi_q`); the **Netherlands** has no full-time adjusted salary (`nama
 combinations such as `bp` = break + provisional) plus `''` for "no flag". Source:
 https://ec.europa.eu/eurostat/api/dissemination/sdmx/2.1/codelist/ESTAT/OBS_FLAG.
 Confidentiality is a separate attribute (`CONF_STATUS`), not a flag.
+
+**Combined flags.** Eurostat sends several flags on one observation as one code with the
+letters concatenated in alphabetical order (e.g. `be`, `bp`, `bep` in `demo_pjan`), and the
+official codelist (so `dim_flag`) contains these combinations. No combined flags currently
+occur in our six datasets. The transform maps a raw flag via `warehouse.normalize_flag()`:
+NULL becomes `''` (no flag); separators (comma, space, semicolon) are removed and the letters
+are lower-cased, de-duplicated and sorted, so `b,p`, `pb` and `bp` all map to `bp`. A flag
+that still has no match in `dim_flag` fails the transform (it is never dropped silently).
 
 Single flags seen in the loaded data:
 
