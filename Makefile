@@ -32,17 +32,17 @@ install:  ## Create .venv and install the package with dev dependencies
 db-shell:  ## Open psql inside the DB container
 	docker compose exec db psql -U $(POSTGRES_USER) -d $(POSTGRES_DB)
 
-pipeline:  ## Full ETL: extract + transform
+pipeline:  ## Full ETL (currently extract only; transform added in Phase 3)
 	$(VENV_PY) -m pipeline.run
 
-extract:
-	@echo "extract: not implemented yet (Phase 1)"
+extract:  ## Download Eurostat datasets into the raw schema
+	$(VENV_PY) -m pipeline.extract
 
 transform:
 	@echo "transform: not implemented yet (Phase 3)"
 
 test:
-	@echo "test: not implemented yet (Phase 5)"
+	$(VENV_PY) -m pytest
 
 lint:
 	$(VENV_BIN)/ruff check src tests

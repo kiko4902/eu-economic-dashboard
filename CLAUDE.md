@@ -9,6 +9,8 @@ transforms it into a star schema, exposes analytics views, and a Power BI report
 It is a portfolio piece for a data role.
 
 **`docs/PLAN.md` is the source of truth.** Read it before starting any phase.
+Final dataset choices are in `docs/data_sources.md` and supersede PLAN section 2
+(HICP uses `prc_hicp_minr`, not the discontinued `prc_hicp_manr`).
 
 ## Tech stack
 
@@ -20,11 +22,12 @@ It is a portfolio piece for a data role.
 
 ```
 sql/init/        schema creation (raw, warehouse, analytics), run on first DB start
+sql/raw/         raw table DDL (tables/, applied by extract) and load_log queries
 sql/warehouse/   DDL for dimensions and facts
 sql/transform/   raw -> warehouse loads
 sql/analytics/   views for Power BI
 src/pipeline/    config, db, extract, transform, quality, run (entry point)
-tests/           pytest tests
+tests/           pytest tests (fixtures/ holds saved API samples; no network in tests)
 powerbi/         .pbix + PDF export (committed)
 docs/            PLAN.md, data_sources.md, images/
 ```
@@ -63,7 +66,7 @@ Work one phase at a time. Do not start a phase until the previous one meets its
 ## Current status
 
 - [x] Phase 0 – Setup
-- [ ] Phase 1 – Extract
+- [x] Phase 1 – Extract
 - [ ] Phase 2 – Data model
 - [ ] Phase 3 – Transform
 - [ ] Phase 4 – Analytics

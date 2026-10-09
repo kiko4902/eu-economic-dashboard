@@ -28,6 +28,7 @@ Thumbs.db
 # Data dumps and local extracts
 data/
 *.csv
+!tests/fixtures/*.csv
 *.tsv
 *.parquet
 *.dump
