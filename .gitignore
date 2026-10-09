@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Local configuration
+.env
+
+# IDE / OS
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+
+# Data dumps and local extracts
+data/
+*.csv
+*.tsv
+*.parquet
+*.dump
+*.backup
+*.sql.gz
+
+# Power BI: the report files in powerbi/ ARE committed
+!powerbi/*.pbix
+!powerbi/*.pdf
