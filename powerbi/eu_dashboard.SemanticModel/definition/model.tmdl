@@ -9,7 +9,7 @@ model Model
 
 annotation __PBI_TimeIntelligenceEnabled = 0
 
-annotation PBI_QueryOrder = ["bi_dim_country","bi_dim_indicator","bi_dim_year","v_country_rank","v_annual_summary","v_known_gaps","v_quality_latest","v_observations","Measures (2)"]
+annotation PBI_QueryOrder = ["bi_dim_country","bi_dim_indicator","bi_dim_year","v_country_rank","v_annual_summary","v_known_gaps","v_quality_latest","v_observations","_Measures"]
 
 annotation PBI_ProTooling = ["DevMode"]
 
@@ -22,7 +22,7 @@ ref table v_known_gaps
 ref table v_quality_latest
 ref table v_observations
 ref table 'Base Year'
-ref table 'Measures (2)'
+ref table _Measures
 
 ref cultureInfo en-US
 

@@ -14,6 +14,7 @@ table bi_dim_indicator
 		lineageTag: 12948357-8b81-4df6-9a95-9383fadf1e4e
 		summarizeBy: none
 		sourceColumn: indicator_name
+		sortByColumn: sort_order
 
 		annotation SummarizationSetBy = Automatic
 

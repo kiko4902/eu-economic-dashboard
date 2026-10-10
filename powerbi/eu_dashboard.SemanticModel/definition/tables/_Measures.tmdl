@@ -1,4 +1,4 @@
-table 'Measures (2)'
+table _Measures
 	lineageTag: 2a9de782-1074-4fe7-99e8-74a300434e9d
 
 	measure 'Annual Value' = IF ( COUNTROWS ( v_annual_summary ) = 1, SUM ( v_annual_summary[value] ) )
@@ -224,6 +224,45 @@ table 'Measures (2)'
 		formatString: General Date
 		lineageTag: ea141a82-6c38-4afe-96c5-a11bc9833dc1
 
+	measure 'Latest Wage Year Text' =
+			VAR LatestYear = [Latest Wage Year]
+			RETURN IF ( NOT ISBLANK ( LatestYear ), FORMAT ( LatestYear, "0" ) )
+
+	measure 'Latest Year Text' =
+			VAR LatestYear =
+			    CALCULATE ( MAX ( v_annual_summary[year] ), REMOVEFILTERS ( bi_dim_year ) )
+			VAR ProvisionalRows =
+			    CALCULATE (
+			        COUNTROWS ( v_annual_summary ),
+			        REMOVEFILTERS ( bi_dim_year ),
+			        bi_dim_year[year] = LatestYear,
+			        v_annual_summary[has_provisional] = TRUE ()
+			    )
+			RETURN
+			    IF ( NOT ISBLANK ( LatestYear ), FORMAT ( LatestYear, "0" ) & IF ( ProvisionalRows > 0, " (p)" ) )
+
+	measure 'Latest GDP Year Text' =
+			CALCULATE ( [Latest Year Text], REMOVEFILTERS ( bi_dim_indicator ), bi_dim_indicator[indicator_code] = "GDP_PC_PPS" )
+
+	measure 'Country KPI Subtitle' =
+			"Wages and house prices: " & [Latest Wage Year Text] & " · GDP: " & [Latest GDP Year Text]
+
+	measure 'GDP vs EU Subtitle' =
+			VAR YearText =
+			    CALCULATE ( [Latest GDP Year Text], REMOVEFILTERS ( bi_dim_country ), bi_dim_country[country_code] = "HR" )
+			RETURN "Croatia, " & YearText & " · EU27 = 100"
+
+	measure 'Unemployment vs EU Subtitle' =
+			VAR YearText =
+			    CALCULATE (
+			        [Latest Year Text],
+			        REMOVEFILTERS ( bi_dim_indicator ),
+			        bi_dim_indicator[indicator_code] = "UNEMPLOYMENT_RATE",
+			        REMOVEFILTERS ( bi_dim_country ),
+			        bi_dim_country[country_code] IN { "HR", "EU27_2020" }
+			    )
+			RETURN "Croatia minus EU27, " & YearText
+
 	column Column1
 		dataType: string
 		isHidden
@@ -235,7 +274,7 @@ table 'Measures (2)'
 
 		annotation SummarizationSetBy = Automatic
 
-	partition 'Measures (2)' = m
+	partition _Measures = m
 		mode: import
 		source =
 				let

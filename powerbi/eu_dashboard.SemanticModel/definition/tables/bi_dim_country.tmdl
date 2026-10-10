@@ -15,6 +15,7 @@ table bi_dim_country
 		dataCategory: Country
 		summarizeBy: none
 		sourceColumn: country_name
+		sortByColumn: sort_order
 
 		annotation SummarizationSetBy = Automatic
 
@@ -23,6 +24,7 @@ table bi_dim_country
 		lineageTag: 55d98fe0-ca0d-4d6c-b5b6-5fb241c84ce6
 		summarizeBy: none
 		sourceColumn: country_short_name
+		sortByColumn: sort_order
 
 		annotation SummarizationSetBy = Automatic
 
