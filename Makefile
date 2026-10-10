@@ -13,10 +13,10 @@ endif
 
 VENV_PY := $(VENV_BIN)/python
 
-.PHONY: help up down install lock db-shell pipeline extract warehouse transform reconcile analytics quality test lint
+.PHONY: help up down install lock db-shell pipeline extract warehouse transform reconcile analytics quality test lint screenshots
 
 help:
-	@echo "Targets: up down install lock db-shell pipeline extract warehouse transform reconcile analytics quality test lint"
+	@echo "Targets: up down install lock db-shell pipeline extract warehouse transform reconcile analytics quality test lint screenshots"
 
 up:  ## Start PostgreSQL and wait until it is healthy
 	docker compose up -d --wait
@@ -60,5 +60,8 @@ test:
 	$(VENV_PY) -m pytest
 
 lint:
-	$(VENV_BIN)/ruff check src tests
-	$(VENV_BIN)/ruff format --check src tests
+	$(VENV_BIN)/ruff check src tests scripts
+	$(VENV_BIN)/ruff format --check src tests scripts
+
+screenshots:  ## Render powerbi/eu_dashboard.pdf to docs/images/powerbi_<page>.png (dev-only tools)
+	$(UV) run --no-project --with pymupdf --with pillow python scripts/render_screenshots.py

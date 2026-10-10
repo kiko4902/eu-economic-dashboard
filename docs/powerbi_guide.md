@@ -1,8 +1,10 @@
 # Power BI guide
 
 How to build the report in Power BI Desktop on top of the `analytics` schema. Everything here is
-prepared in the database and this repo; the report itself (`powerbi/eu_dashboard.pbix`) is built
-by hand. Before starting, run `make up` and `make pipeline` so the views are filled.
+prepared in the database and this repo. The finished report is `powerbi/eu_dashboard.pbip` (Power
+BI project: model in TMDL, report in PBIR, both plain text and diffable) with a `.pbix` copy and a
+PDF export next to it; this guide documents how it is built. Before starting, run `make up` and
+`make pipeline` so the views are filled.
 
 Contents: [1. Connect](#1-connect) · [2. Import](#2-what-to-import) ·
 [3. Model](#3-model-relationships-and-settings) · [4. Theme](#4-theme) ·
@@ -60,10 +62,10 @@ duplicate data):
 | View | Replaced by measure |
 |---|---|
 | `v_yoy_change` | `YoY %`, `YoY Change` |
-| `v_index_base_2015` | `Change Since Base Year %`, `Index (Base Year = 100)` |
-| `v_real_wage_growth` | `Real Wage Growth %`, `Real Wage Index (2010 = 100)` |
+| `v_index_base_2015` | `Change Since Base Year %`, `Index Base Year` |
+| `v_real_wage_growth` | `Real Wage Growth %`, `Real Wage Index 2010` |
 | `v_housing_affordability` | `Housing Affordability Ratio` |
-| `v_gdp_relative_to_eu` | `Croatia vs EU (EU = 100)` |
+| `v_gdp_relative_to_eu` | `Croatia vs EU Index` |
 
 Click **Load** (not Transform). No Power Query steps are needed.
 
@@ -124,15 +126,17 @@ in the database: 0 orphans), so Power BI accepts these as 1:\* without a blank m
 
 **View → Themes → Browse for themes** → `powerbi/theme.json`.
 
-- **Croatia** is always `#C8102E` (red) and **EU27** always `#1F4E9E` (blue). They are the first
-  two theme colours, and with the sort order above Croatia and the EU are the first two series
-  in legends, so they get these colours by default.
-- A theme cannot bind a colour to a category *value*. Where the series order differs (e.g. a bar
-  chart sorted by value), set the colours explicitly. In bar/column charts use **Format →
-  Columns/Bars → Colors → fx → Format style: Field value → `bi_dim_country[highlight_colour]`
-  (First)**: Croatia red, EU blue, other countries grey. In line charts with a country legend,
-  check that Croatia/EU have the right colours, and if not, set them once under **Format →
-  Lines → Colors**.
+- **Croatia** is always `#C8102E` (red) and **EU27** always `#1F4E9E` (blue). A theme cannot
+  bind a colour to a category *value*, so every visual with a country legend sets these two
+  colours explicitly (**Format → Lines/Columns → Colors**, per series).
+- The theme's data colours (`dataColors`) are 16 muted colours **without red or blue** (teal,
+  amber, mauve, green, brown, slate, ...). Power BI hands out palette colours only to series
+  without an explicit colour, so with red and blue in the palette another country (e.g.
+  Austria) would get Croatia's red. Keeping them out of the palette makes Croatia and the EU the
+  only red and blue series.
+- In bar/column charts of all countries use **Format → Columns/Bars → Colors → fx → Format
+  style: Field value → `bi_dim_country[highlight_colour]` (First)**: Croatia red, EU blue,
+  other countries grey. The ranking table uses the same column for the font colour of the name.
 - Fonts: Segoe UI (labels) and Segoe UI Semibold (titles, KPI numbers). Pages have a light grey
   background and white cards.
 
@@ -250,12 +254,12 @@ VAR IsRate = SELECTEDVALUE ( bi_dim_indicator[is_rate], FALSE () )
 RETURN
     IF ( NOT IsRate && NOT ISBLANK ( Curr ) && NOT ISBLANK ( Base ), DIVIDE ( Curr, Base ) - 1 )
 
-Index (Base Year = 100) =
+Index Base Year =
 VAR Change = [Change Since Base Year %]
 RETURN IF ( NOT ISBLANK ( Change ), ( 1 + Change ) * 100 )
 ```
 The change from the base year (slicer `'Base Year'`, default 2010) to the year in context, or to
-the latest year on a card without a year. Format: Percentage, 1 decimal. `Index (Base Year = 100)`
+the latest year on a card without a year. Format: Percentage, 1 decimal. `Index Base Year`
 (format: 1 decimal) shows the same as an index line, e.g. house prices vs wages with base 2015.
 
 **4. Real wage growth**
@@ -279,7 +283,7 @@ currency (no exchange-rate effects). Format: Percentage, 1 decimal.
 **5. Cumulative real wage index**
 
 ```DAX
-Real Wage Index (2010 = 100) =
+Real Wage Index 2010 =
 VAR Wage = [Wage NAC]
 VAR Wage2010 =
     CALCULATE ( [Wage NAC], REMOVEFILTERS ( bi_dim_year ), bi_dim_year[year] = 2010 )
@@ -296,7 +300,7 @@ RETURN
 Real Wage Index (latest) =
 VAR LatestYear = [Latest Wage Year]
 RETURN
-    CALCULATE ( [Real Wage Index (2010 = 100)], REMOVEFILTERS ( bi_dim_year ), bi_dim_year[year] = LatestYear )
+    CALCULATE ( [Real Wage Index 2010], REMOVEFILTERS ( bi_dim_year ), bi_dim_year[year] = LatestYear )
 ```
 Real wages with 2010 = 100: 116.6 means "16.6 % higher in real terms than in 2010". Format: 1
 decimal. The year-by-year chain of real growth rates telescopes to (wage / wage 2010) / (prices /
@@ -339,7 +343,7 @@ CALCULATE ( [Annual Value], REMOVEFILTERS ( bi_dim_country ), bi_dim_country[cou
 EU Value =
 CALCULATE ( [Annual Value], REMOVEFILTERS ( bi_dim_country ), bi_dim_country[country_code] = "EU27_2020" )
 
-Croatia vs EU (EU = 100) =
+Croatia vs EU Index =
 DIVIDE ( [Croatia Value], [EU Value] ) * 100
 
 Croatia - EU Gap =
@@ -347,12 +351,12 @@ VAR Hr = [Croatia Value]
 VAR Eu = [EU Value]
 RETURN IF ( NOT ISBLANK ( Hr ) && NOT ISBLANK ( Eu ), Hr - Eu )
 
-Index vs EU (EU = 100) =
+Index vs EU =
 DIVIDE ( [Annual Value], [EU Value] ) * 100
 ```
 For the selected indicator and year: Croatia as % of the EU level (format: 1 decimal; GDP per
 capita 77.6 = 77.6 % of the EU), and the absolute gap in the indicator's unit (format: 1 decimal;
-percentage points for rates). Use `EU = 100` for levels (GDP, wages in EUR) and the gap for rates. `Index vs EU (EU = 100)` is
+percentage points for rates). Use `EU = 100` for levels (GDP, wages in EUR) and the gap for rates. `Index vs EU` is
 the same ratio for whichever country is in context, for bar charts of all countries.
 
 ### Small helpers for the data quality page
@@ -365,7 +369,50 @@ Quality Run Status = SELECTEDVALUE ( v_quality_latest[run_status], "no run" )
 Quality Run Time = MAX ( v_quality_latest[run_finished_at] )
 ```
 Counts of results by status, plus the run status and finish time for cards (format the time as
-`yyyy-mm-dd hh:nn`).
+`yyyy-mm-dd hh:mm`).
+
+### Display helpers (text and fixed-indicator measures)
+
+Card and table values that must look the same on every machine are **text measures** with an
+explicit `en-US` locale. A number format on the visual follows the Desktop/viewer locale (e.g.
+`32370,2` on a Croatian system) and was not applied reliably to the new card visual.
+
+```DAX
+Latest Wage Year Text =
+VAR LatestYear = [Latest Wage Year]
+RETURN IF ( NOT ISBLANK ( LatestYear ), FORMAT ( LatestYear, "0" ) )
+
+Latest Year Text =            -- latest year of the indicator in context, " (p)" if provisional
+Latest GDP Year Text = CALCULATE ( [Latest Year Text], REMOVEFILTERS ( bi_dim_indicator ), bi_dim_indicator[indicator_code] = "GDP_PC_PPS" )
+
+Country KPI Subtitle = "Wages and house prices: " & [Latest Wage Year Text] & " · GDP: " & [Latest GDP Year Text]
+GDP vs EU Subtitle =          -- "Croatia, 2025 (p) · EU27 = 100"
+Unemployment vs EU Subtitle = -- "Croatia minus EU27, 2025"
+
+GDP per Capita Text =
+VAR Gdp =
+    CALCULATE ( [Latest Value], REMOVEFILTERS ( bi_dim_indicator ), bi_dim_indicator[indicator_code] = "GDP_PC_PPS" )
+RETURN IF ( NOT ISBLANK ( Gdp ), FORMAT ( Gdp, "#,0", "en-US" ) )
+
+Croatia - EU Gap Text =
+VAR Gap = [Croatia - EU Gap]
+VAR Sign = SWITCH ( TRUE (), Gap < 0, UNICHAR ( 8722 ), Gap > 0, "+", "" )
+RETURN IF ( NOT ISBLANK ( Gap ), Sign & FORMAT ( ABS ( Gap ), "0.0", "en-US" ) & " pp" )
+
+Rank Value Text =
+VAR RankValue = SELECTEDVALUE ( v_country_rank[value] )
+VAR Code = SELECTEDVALUE ( v_country_rank[indicator_code] )
+VAR Pattern = IF ( Code IN { "WAGE_EUR", "NET_EARNINGS", "GDP_PC_PPS" }, "#,0", "0.0" )
+RETURN IF ( NOT ISBLANK ( RankValue ), FORMAT ( RankValue, Pattern, "en-US" ) )
+
+House Price Index (Base Year) = CALCULATE ( [Index Base Year], REMOVEFILTERS ( bi_dim_indicator ), bi_dim_indicator[indicator_code] = "HOUSE_PRICE_INDEX" )
+Wage Index (Base Year) = CALCULATE ( [Index Base Year], REMOVEFILTERS ( bi_dim_indicator ), bi_dim_indicator[indicator_code] = "WAGE_NAC" )
+```
+The full definitions of the shortened ones are in
+`powerbi/eu_dashboard.SemanticModel/definition/tables/_Measures.tmdl`. The last two give the
+Housing chart a legend that reads "House prices" / "Wages" (display names) instead of the
+indicator names. `v_country_rank[has_provisional]` has the format string `"p";"p";`, so the
+ranking table shows "p" or nothing.
 
 ## 6. Pages
 
@@ -387,10 +434,10 @@ prc_hicp_minr, prc_hpi_q, une_rt_m, nama_10_pc), © European Union, CC BY 4.0.*
 
 | Visual | Fields / measures | Notes |
 |---|---|---|
-| 6 KPI cards in two rows: Croatia (top), EU27 (bottom) | `Real Wage Index (latest)`, `Housing Affordability Ratio (latest)`, `Latest Value` with visual filter indicator = `GDP_PC_PPS` | each card: visual-level filter `bi_dim_country[country_code]` = HR or EU27_2020. Card titles: "Real wages vs 2010 (2010 = 100)", "House prices vs wages (2015 = 100)", "GDP per capita, PPS". Subtitle with `Latest Wage Year` |
-| 2 KPI cards | `Croatia vs EU (EU = 100)` (indicator filter `GDP_PC_PPS`, year filter = latest annual year via `bi_dim_year[is_latest_annual_year]` = True); `Croatia - EU Gap` (indicator `UNEMPLOYMENT_RATE`, same year filter) | "GDP per capita, % of EU" (77.6) and "Unemployment vs EU, pp" (−1.1) |
-| Line chart | X: `bi_dim_year[year]`; Y: `Real Wage Index (2010 = 100)`; Legend: `bi_dim_country[country_short_name]` | visual filter: country in (HR, EU27_2020); constant line at 100 |
-| Text box | 3–4 findings from `docs/findings_draft.md` (1, 2, 3, 4), one sentence each | mark provisional numbers (2025 GDP) with "(p)" |
+| 2 KPI cards (new card visual, 3 tiles each): Croatia (top), EU27 (bottom) | `Real Wage Index (latest)`, `Housing Affordability Ratio (latest)`, `GDP per Capita Text` | each card: visual-level filter `bi_dim_country[country_code]` = HR or EU27_2020. Tile labels: "Real wages vs 2010 (2010 = 100)", "House prices vs wages (2015 = 100)", "GDP per capita, PPS". Subtitle: `Country KPI Subtitle` (fx) |
+| 2 KPI cards | `Croatia vs EU Index` (indicator filter `GDP_PC_PPS`, year filter = latest annual year via `bi_dim_year[is_latest_annual_year]` = True); `Croatia - EU Gap Text` (indicator `UNEMPLOYMENT_RATE`, same year filter) | titles "GDP per capita vs EU" (77.6) and "Unemployment vs EU" (−1.1 pp); subtitles `GDP vs EU Subtitle`, `Unemployment vs EU Subtitle` |
+| Line chart | X: `bi_dim_year[year]`; Y: `Real Wage Index 2010`; Legend: `bi_dim_country[country_short_name]` | visual filter: country in (HR, EU27_2020); constant line at 100 |
+| Text box | 3–4 findings from `docs/findings.md` (1, 2, 3, 4), one sentence each | mark provisional numbers (2025 GDP) with "(p)" |
 
 No slicers on this page: it always shows Croatia vs EU at the latest data.
 
@@ -402,12 +449,12 @@ Unemployment fell from 17.4 % (2013) to 4.9 %, below the EU (finding 5).
 
 | Visual | Fields / measures | Notes |
 |---|---|---|
-| Small-multiples line chart | X: `bi_dim_year[year]`; Y: `Annual Value`; Legend: `bi_dim_country[country_short_name]`; Small multiples: `bi_dim_indicator[indicator_name]` | visual filter: indicator in (WAGE_NAC, HICP_INFLATION, UNEMPLOYMENT_RATE, HOUSE_PRICE_INDEX, GDP_PC_PPS, NET_EARNINGS); Format → Small multiples → **independent Y axes** (units differ) |
-| Clustered column chart | X: `bi_dim_year[year]`; Y: `Real Wage Growth %`; Legend: country | years 2011+; data labels on; this shows 2022–2023 |
+| 6 line charts in a 3 × 2 grid, one per indicator | X: `bi_dim_year[year]`; Y: `Annual Value`; Legend: `bi_dim_country[country_short_name]` | one visual filter each: WAGE_NAC, HICP_INFLATION, UNEMPLOYMENT_RATE, HOUSE_PRICE_INDEX, GDP_PC_PPS, NET_EARNINGS; title with the unit. Separate charts instead of one small-multiples chart, so each has its own title, unit and Y axis |
+| Clustered column chart | X: `bi_dim_year[year]`; Y: `Real Wage Growth %`; Legend: country | years 2011+; data labels off (they overlap), values in the tooltip; this shows 2022–2023 |
 | Line chart (monthly) | X: `v_observations[period_date]` (continuous); Y: `Period Value`; Legend: country | visual filter: indicator = `HICP_ANNUAL_RATE`; title "Inflation, % on same month last year" |
 | Slicers | Country (synced), Year range (synced) | |
 
-Tooltip tip: add `bi_dim_indicator[unit]` and `YoY %` / `YoY Change` to the small multiples'
+Tooltip tip: add `bi_dim_indicator[unit]` and `YoY %` / `YoY Change` to the six line charts'
 tooltips.
 
 ### Page 3 – Country comparison
@@ -418,8 +465,8 @@ tooltips.
 | Visual | Fields / measures | Notes |
 |---|---|---|
 | Filled map | Location: `bi_dim_country[country_name]` (data category Country/Region); Color saturation: `Annual Value` | visual filter `bi_dim_country[is_aggregate]` = False; needs one indicator and one year (slicers below). Enable map visuals under File → Options → Security if prompted |
-| Table (ranking) | `bi_dim_country[country_short_name]`, `v_country_rank[value]` (Don't summarize), `v_country_rank[country_rank]`, `v_country_rank[countries_ranked]`, `v_country_rank[has_provisional]` | sort by rank; background colour fx → field value `bi_dim_country[highlight_colour]` on the name column |
-| Bar chart | Y: `bi_dim_country[country_short_name]`; X: `Index vs EU (EU = 100)` | visual filter: indicator = `GDP_PC_PPS` (fixed, independent of the indicator slicer: Edit interactions → none); bars coloured by `highlight_colour` (fx); constant line at 100; sort descending. Title "GDP per capita in PPS, EU = 100" |
+| Table (ranking) | `bi_dim_country[country_short_name]`, `Rank Value Text`, `v_country_rank[country_rank]`, `v_country_rank[countries_ranked]`, `v_country_rank[has_provisional]` | sort by rank; font colour fx → field value `bi_dim_country[highlight_colour]` on the name column; values right-aligned (no decimals for wages, earnings and GDP, 1 decimal otherwise) |
+| Bar chart | Y: `bi_dim_country[country_short_name]`; X: `Index vs EU` | visual filter: indicator = `GDP_PC_PPS` (fixed, independent of the indicator slicer: Edit interactions → none); bars coloured by `highlight_colour` (fx); constant line at 100; sort descending. Title "GDP per capita in PPS, EU = 100" |
 | Slicers | Indicator: `bi_dim_indicator[indicator_name]`, single select, filtered to the ranked indicators (WAGE_EUR, NET_EARNINGS, GDP_PC_PPS, UNEMPLOYMENT_RATE, HICP_INFLATION, REAL_WAGE_GROWTH, HOUSING_AFFORDABILITY); Year: single-value dropdown (default latest) | the year slicer here is a *single* year, not synced with the range slider |
 
 Caption under the table: "Rank 1 = best. Higher is better for wages, earnings, GDP and real
@@ -438,11 +485,11 @@ owner-occupied housing and house purchases (finding 3 and the HICP section of th
 
 | Visual | Fields / measures | Notes |
 |---|---|---|
-| Line chart | X: `bi_dim_year[year]`; Y: `Index (Base Year = 100)`; Legend: `bi_dim_indicator[indicator_name]` | visual filters: indicator in (HOUSE_PRICE_INDEX, WAGE_NAC), country = HR; set the `Base Year` slicer to 2015 for this page (or a page filter `'Base Year'[Base Year]` = 2015). Title "Croatia: house prices vs wages, 2015 = 100" |
+| Line chart | X: `bi_dim_year[year]`; Y: `House Price Index (Base Year)` (display name "House prices") and `Wage Index (Base Year)` ("Wages") | visual filter: country = HR; set the `Base Year` slicer to 2015 for this page (or a page filter `'Base Year'[Base Year]` = 2015). Title "Croatia: house prices vs wages, 2015 = 100" |
 | Line chart | X: `bi_dim_year[year]`; Y: `Housing Affordability Ratio`; Legend: country | constant line at 100 labelled "2015 level"; years 2015+ |
 | Bar chart | Y: `bi_dim_country[country_short_name]`; X: `Housing Affordability Ratio` | year filter 2024 (latest with wages); bars coloured by `highlight_colour`; sort descending (Portugal 149.5 top) |
 | Line chart (quarterly) | X: `v_observations[period_date]`; Y: `Period Value`; Legend: country | indicator = `HOUSE_PRICE_INDEX`; shows 2025–2026 after wage data ends |
-| Text box | "Why can real wages rise while housing gets less affordable?" + 2 sentences from findings_draft.md (HICP excludes owner-occupied housing; Eurostat 2023) | |
+| Text box | "Why can real wages rise while housing gets less affordable?" + 2 sentences from `docs/findings.md` (HICP excludes owner-occupied housing; Eurostat 2023) | |
 | Slicers | Country (synced), Year range (synced) | Greece has no house price index, the Netherlands no wage data |
 
 ### Page 5 – Data quality
@@ -473,9 +520,9 @@ After building the measures, put them in a table with `bi_dim_country[country_sh
 | `Change Since Base Year %` (HOUSE_PRICE_INDEX, base 2015) | Croatia | 2024 | 99.4 % |
 | `Change Since Base Year %` (WAGE_NAC, base 2010) | Croatia | 2024 | 66.3 % |
 | `Real Wage Growth %` | Croatia | 2022 / 2023 / 2024 | 1.6 % / 4.6 % / 4.1 % (1.61, 4.58, 4.06) |
-| `Real Wage Index (2010 = 100)` | Croatia / EU27 | 2024 | 116.6 / 104.5 |
+| `Real Wage Index 2010` | Croatia / EU27 | 2024 | 116.6 / 104.5 |
 | `Housing Affordability Ratio` | Croatia / EU27 | 2024 | 119.5 / 115.2 |
-| `Croatia vs EU (EU = 100)` (GDP_PC_PPS) | – | 2025 | 77.6 |
+| `Croatia vs EU Index` (GDP_PC_PPS) | – | 2025 | 77.6 |
 | `Croatia - EU Gap` (UNEMPLOYMENT_RATE) | – | 2025 | −1.1 pp |
 
 A different number usually means a relationship is missing or bidirectional, `Auto date/time`
@@ -485,7 +532,9 @@ is still on, or a visual filter on the indicator is missing.
 
 - Save as `powerbi/eu_dashboard.pbix` (committed; `.gitignore` allows `powerbi/*.pbix`).
 - **File → Export → Export to PDF** → `powerbi/eu_dashboard.pdf`.
-- Screenshots of each page (1280 × 720) → `docs/images/powerbi_<page>.png` for the README.
+- Screenshots for the README: `make screenshots` renders each PDF page to
+  `docs/images/powerbi_<page>.png` (PyMuPDF and Pillow via `uv run --with`, not project
+  dependencies).
 - "Publish to web" needs a work or school Microsoft account. Without one, the PDF and
   screenshots are enough.
 - To refresh with new data: `make pipeline`, then **Home → Refresh** in Power BI Desktop.

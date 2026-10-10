@@ -32,9 +32,11 @@ sql/roles/       read-only powerbi_reader role (SELECT on analytics only)
 src/pipeline/    config, db, extract, warehouse, transform, analytics, quality, reconciliation, run
 tests/           pytest (fixtures/ API samples, db_helpers.py, sql/); no network in tests
 .github/         workflows: ci.yml (push/PR), scheduled.yml (weekly + manual)
-powerbi/         theme.json; .pbix + PDF export (committed, built by hand)
-docs/            PLAN.md, data_sources.md, findings_draft.md, powerbi_guide.md, SETUP_NOTES.md,
-                 images/ (er_diagram.md)
+powerbi/         eu_dashboard.pbip (PBIP: SemanticModel/ in TMDL, Report/ in PBIR), .pbix copy,
+                 PDF export, theme.json
+scripts/         dev-only tools (render_screenshots.py), not project dependencies
+docs/            PLAN.md, data_sources.md, findings.md, powerbi_guide.md, SETUP_NOTES.md,
+                 images/ (architecture.md, er_diagram.md, powerbi_<page>.png)
 ```
 
 ## Conventions
@@ -67,7 +69,8 @@ make quality     # all quality checks (error fails, warning logs); results in qu
 make reconcile   # raw vs fact row counts; every difference must have a skip reason
 make test        # pytest; DB tests run in a rolled-back transaction, skip without DB
                  # (REQUIRE_DB=1 makes them fail instead, as in CI)
-make lint        # ruff check + format check
+make lint        # ruff check + format check (src, tests, scripts)
+make screenshots # render powerbi/eu_dashboard.pdf to docs/images/powerbi_<page>.png
 ```
 
 Init scripts in `sql/init/` only run on an empty volume; use `docker compose down -v` to reset.
@@ -90,6 +93,22 @@ Work one phase at a time. Do not start a phase until the previous one meets its
 - [x] Phase 3 – Transform
 - [x] Phase 4 – Analytics
 - [x] Phase 5 – Quality, tests, CI
-- [ ] Phase 6 – Power BI (preparation done: bi_dim_* and quality views, docs/powerbi_guide.md,
-      powerbi/theme.json; the report itself is built by hand in Power BI Desktop)
-- [ ] Phase 7 – Documentation
+- [x] Phase 6 – Power BI
+- [x] Phase 7 – Documentation
+
+## Maintenance
+
+- **Refresh data:** `make up`, `make pipeline` (ends with the quality checks), then in Power BI
+  Desktop open `powerbi/eu_dashboard.pbip` → Home → Refresh (user `powerbi_reader`, password
+  from `.env`). Save, export to PDF (`powerbi/eu_dashboard.pdf`) and save the `.pbix` copy.
+  If numbers changed, update `docs/findings.md` (re-run its SQL), the Overview text boxes and
+  the README findings.
+- **Regenerate screenshots:** after a new PDF export, `make screenshots` (PyMuPDF + Pillow via
+  `uv run --with`, nothing added to the project).
+- **Update dependencies:** `make lock`, then `make lint test`, commit `uv.lock`.
+- **Report files:** the PBIP folder is the source of truth for the report; edit it in Desktop
+  (or the PBIR/TMDL text files) and keep `docs/powerbi_guide.md` in step. Do not commit
+  `.pbi/localSettings.json` or `.pbi/cache.abf` (git-ignored).
+- **Weekly CI run** (`scheduled.yml`) fails on quality errors (e.g. a renamed dataset, a new
+  gap); stale known gaps and old data are warnings in its log artifact. Fix the filters
+  (`config.DATASETS`, `docs/data_sources.md`) or `seeds/known_gaps.csv`.

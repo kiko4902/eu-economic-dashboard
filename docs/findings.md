@@ -1,4 +1,4 @@
-# Findings (draft)
+# Findings
 
 **Question:** has life in Croatia (and the EU) become more or less affordable since 2010?
 
@@ -7,10 +7,20 @@ faster than consumer prices, by more than the EU average, and the gap widened af
 2022–2023 inflation shock. For **housing, less affordable**: since 2015, house prices in
 Croatia have risen much faster than wages, more so than in the EU as a whole.
 
-Data: Eurostat, retrieved 2026-10-09 (see `docs/data_sources.md`). All numbers come from the
-`analytics` views; each finding lists its query. Annual figures use complete years only, so
-2026 is not included. Comparison countries: Slovenia (neighbour, euro area), Poland (fast
-converger, own currency) and Italy (slow growth); others where notable.
+Data: Eurostat, retrieved 2026-10-09 (see `docs/data_sources.md`). Every number below comes
+from the `analytics` views, and each finding ends with the SQL that produces it (run it with
+`make db-shell`). Annual figures use complete years only, so 2026 is not included. Comparison
+countries: Slovenia (neighbour, euro area), Poland (fast converger, own currency) and Italy
+(slow growth); others where notable.
+
+| # | Finding | Croatia | EU27 |
+|---|---|---|---|
+| 1 | Real wage index 2024 (2010 = 100) | 116.6 | 104.5 |
+| 2 | Real wage growth 2022 / 2023 | +1.6 % / +4.6 % | −3.7 % / −0.2 % |
+| 3 | House prices relative to wages 2024 (2015 = 100) | 119.5 | 115.2 |
+| 4 | GDP per capita in PPS, % of EU: 2010 → 2025 (p) | 60.7 → 77.6 | 100 |
+| 5 | Unemployment rate 2025 | 4.9 % | 6.0 % |
+| 6 | Real net earnings, 2013 → 2023 | +25.1 % | +4.6 % |
 
 **Flagged data (checked against the views' flag columns):**
 - **Provisional (`p`):**
@@ -250,7 +260,7 @@ buying a home gets more expensive relative to wages (finding 3). Both can be tru
 HICP does include housing costs that are actual consumer payments, such as rents paid by
 tenants.
 
-## Caveats for the final write-up
+## Caveats
 
 - Wages are **gross** average full-time adjusted salaries (national accounts), not take-home
   pay. See finding 2 for how they differ from the DZS average wage.
