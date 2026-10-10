@@ -53,11 +53,11 @@
                       "Entity": "_Measures"
                     }
                   },
-                  "Property": "Latest Value"
+                  "Property": "GDP per Capita Text"
                 }
               },
-              "queryRef": "_Measures.Latest Value",
-              "nativeQueryRef": "Latest Value",
+              "queryRef": "_Measures.GDP per Capita Text",
+              "nativeQueryRef": "GDP per Capita Text",
               "displayName": "GDP per capita, PPS"
             }
           ]
@@ -252,20 +252,6 @@
           },
           "selector": {
             "id": "default"
-          }
-        },
-        {
-          "properties": {
-            "customFormatString": {
-              "expr": {
-                "Literal": {
-                  "Value": "'#,0'"
-                }
-              }
-            }
-          },
-          "selector": {
-            "metadata": "_Measures.Latest Value"
           }
         }
       ]
@@ -530,59 +516,6 @@
                       {
                         "Literal": {
                           "Value": "'EU27_2020'"
-                        }
-                      }
-                    ]
-                  ]
-                }
-              }
-            }
-          ]
-        }
-      },
-      {
-        "name": "indicator_gdp",
-        "field": {
-          "Column": {
-            "Expression": {
-              "SourceRef": {
-                "Entity": "bi_dim_indicator"
-              }
-            },
-            "Property": "indicator_code"
-          }
-        },
-        "type": "Categorical",
-        "filter": {
-          "Version": 2,
-          "From": [
-            {
-              "Name": "f",
-              "Entity": "bi_dim_indicator",
-              "Type": 0
-            }
-          ],
-          "Where": [
-            {
-              "Condition": {
-                "In": {
-                  "Expressions": [
-                    {
-                      "Column": {
-                        "Expression": {
-                          "SourceRef": {
-                            "Source": "f"
-                          }
-                        },
-                        "Property": "indicator_code"
-                      }
-                    }
-                  ],
-                  "Values": [
-                    [
-                      {
-                        "Literal": {
-                          "Value": "'GDP_PC_PPS'"
                         }
                       }
                     ]

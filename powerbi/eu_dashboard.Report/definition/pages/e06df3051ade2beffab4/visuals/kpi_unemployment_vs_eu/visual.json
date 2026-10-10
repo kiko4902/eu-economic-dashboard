@@ -23,11 +23,11 @@
                       "Entity": "_Measures"
                     }
                   },
-                  "Property": "Croatia - EU Gap"
+                  "Property": "Croatia - EU Gap Text"
                 }
               },
-              "queryRef": "_Measures.Croatia - EU Gap",
-              "nativeQueryRef": "Croatia - EU Gap",
+              "queryRef": "_Measures.Croatia - EU Gap Text",
+              "nativeQueryRef": "Croatia - EU Gap Text",
               "displayName": "Unemployment rate gap"
             }
           ]
@@ -222,20 +222,6 @@
           },
           "selector": {
             "id": "default"
-          }
-        },
-        {
-          "properties": {
-            "customFormatString": {
-              "expr": {
-                "Literal": {
-                  "Value": "'+0.0\" pp\";\"−\"0.0\" pp\";0.0\" pp\"'"
-                }
-              }
-            }
-          },
-          "selector": {
-            "metadata": "_Measures.Croatia - EU Gap"
           }
         }
       ]

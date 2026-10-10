@@ -263,6 +263,30 @@ table _Measures
 			    )
 			RETURN "Croatia minus EU27, " & YearText
 
+	measure 'GDP per Capita Text' =
+			VAR Gdp =
+			    CALCULATE ( [Latest Value], REMOVEFILTERS ( bi_dim_indicator ), bi_dim_indicator[indicator_code] = "GDP_PC_PPS" )
+			RETURN IF ( NOT ISBLANK ( Gdp ), FORMAT ( Gdp, "#,0", "en-US" ) )
+
+	measure 'Croatia - EU Gap Text' =
+			VAR Gap = [Croatia - EU Gap]
+			VAR Sign = SWITCH ( TRUE (), Gap < 0, UNICHAR ( 8722 ), Gap > 0, "+", "" )
+			RETURN IF ( NOT ISBLANK ( Gap ), Sign & FORMAT ( ABS ( Gap ), "0.0", "en-US" ) & " pp" )
+
+	measure 'Rank Value Text' =
+			VAR RankValue = SELECTEDVALUE ( v_country_rank[value] )
+			VAR Code = SELECTEDVALUE ( v_country_rank[indicator_code] )
+			VAR Pattern = IF ( Code IN { "WAGE_EUR", "NET_EARNINGS", "GDP_PC_PPS" }, "#,0", "0.0" )
+			RETURN IF ( NOT ISBLANK ( RankValue ), FORMAT ( RankValue, Pattern, "en-US" ) )
+
+	measure 'House Price Index (Base Year)' =
+			CALCULATE ( [Index Base Year], REMOVEFILTERS ( bi_dim_indicator ), bi_dim_indicator[indicator_code] = "HOUSE_PRICE_INDEX" )
+		formatString: 0.0
+
+	measure 'Wage Index (Base Year)' =
+			CALCULATE ( [Index Base Year], REMOVEFILTERS ( bi_dim_indicator ), bi_dim_indicator[indicator_code] = "WAGE_NAC" )
+		formatString: 0.0
+
 	column Column1
 		dataType: string
 		isHidden

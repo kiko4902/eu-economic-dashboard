@@ -31,31 +31,9 @@
               {
                 "textRuns": [
                   {
-                    "value": " ",
-                    "textStyle": {
-                      "fontSize": "5pt",
-                      "color": "#252A31"
-                    }
-                  }
-                ]
-              },
-              {
-                "textRuns": [
-                  {
                     "value": "• Real wages: Croatia 116.6 vs EU27 104.5 in 2024 (2010 = 100); 12th of 26 member states.",
                     "textStyle": {
                       "fontSize": "9pt",
-                      "color": "#252A31"
-                    }
-                  }
-                ]
-              },
-              {
-                "textRuns": [
-                  {
-                    "value": " ",
-                    "textStyle": {
-                      "fontSize": "5pt",
                       "color": "#252A31"
                     }
                   }
@@ -75,17 +53,6 @@
               {
                 "textRuns": [
                   {
-                    "value": " ",
-                    "textStyle": {
-                      "fontSize": "5pt",
-                      "color": "#252A31"
-                    }
-                  }
-                ]
-              },
-              {
-                "textRuns": [
-                  {
                     "value": "• Housing: 2015–2024 house prices +99 %, wages +67 %, so housing is ~20 % less affordable (EU: 15 %).",
                     "textStyle": {
                       "fontSize": "9pt",
@@ -97,31 +64,9 @@
               {
                 "textRuns": [
                   {
-                    "value": " ",
-                    "textStyle": {
-                      "fontSize": "5pt",
-                      "color": "#252A31"
-                    }
-                  }
-                ]
-              },
-              {
-                "textRuns": [
-                  {
                     "value": "• Catching up: GDP per capita (PPS) rose from 61 % of the EU average in 2010 to 78 % in 2025 (p).",
                     "textStyle": {
                       "fontSize": "9pt",
-                      "color": "#252A31"
-                    }
-                  }
-                ]
-              },
-              {
-                "textRuns": [
-                  {
-                    "value": " ",
-                    "textStyle": {
-                      "fontSize": "5pt",
                       "color": "#252A31"
                     }
                   }
