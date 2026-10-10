@@ -1,5 +1,5 @@
 {
-  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.12.0/schema.json",
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.13.0/schema.json",
   "name": "panel_net_earnings",
   "position": {
     "x": 524,
@@ -29,25 +29,6 @@
               "queryRef": "bi_dim_year.year",
               "nativeQueryRef": "year",
               "active": true
-            }
-          ]
-        },
-        "Y": {
-          "projections": [
-            {
-              "field": {
-                "Measure": {
-                  "Expression": {
-                    "SourceRef": {
-                      "Entity": "_Measures"
-                    }
-                  },
-                  "Property": "Annual Value"
-                }
-              },
-              "queryRef": "_Measures.Annual Value",
-              "nativeQueryRef": "Annual Value",
-              "displayName": "Net earnings (single person)"
             }
           ]
         },
@@ -98,6 +79,25 @@
               },
               "queryRef": "_Measures.YoY Change",
               "nativeQueryRef": "YoY Change"
+            }
+          ]
+        },
+        "Y": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Measures"
+                    }
+                  },
+                  "Property": "Annual Value"
+                }
+              },
+              "queryRef": "_Measures.Annual Value",
+              "nativeQueryRef": "Annual Value",
+              "displayName": "Net earnings (single person)"
             }
           ]
         }
@@ -560,7 +560,78 @@
               }
             }
           ]
-        }
+        },
+        "howCreated": "User"
+      },
+      {
+        "name": "91d975f3a234a4746d2f",
+        "field": {
+          "Column": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "bi_dim_year"
+              }
+            },
+            "Property": "year"
+          }
+        },
+        "type": "Advanced"
+      },
+      {
+        "name": "69422ec4bedb57100be2",
+        "field": {
+          "Measure": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "_Measures"
+              }
+            },
+            "Property": "Annual Value"
+          }
+        },
+        "type": "Advanced"
+      },
+      {
+        "name": "ee8b2522ccb7a01e12e3",
+        "field": {
+          "Column": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "bi_dim_country"
+              }
+            },
+            "Property": "country_short_name"
+          }
+        },
+        "type": "Categorical"
+      },
+      {
+        "name": "53b0d0aa56962b35158a",
+        "field": {
+          "Measure": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "_Measures"
+              }
+            },
+            "Property": "YoY %"
+          }
+        },
+        "type": "Advanced"
+      },
+      {
+        "name": "397c1fae1c5099f81d07",
+        "field": {
+          "Measure": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "_Measures"
+              }
+            },
+            "Property": "YoY Change"
+          }
+        },
+        "type": "Advanced"
       }
     ]
   }

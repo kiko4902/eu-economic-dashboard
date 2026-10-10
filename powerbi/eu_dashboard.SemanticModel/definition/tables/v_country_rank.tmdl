@@ -98,7 +98,7 @@ table v_country_rank
 
 	column has_provisional
 		dataType: boolean
-		formatString: """p"";""p"";"
+		formatString: "p";"p";
 		lineageTag: 7ee60dfe-2ab7-4b29-a78a-dc96dba93dcf
 		summarizeBy: none
 		sourceColumn: has_provisional

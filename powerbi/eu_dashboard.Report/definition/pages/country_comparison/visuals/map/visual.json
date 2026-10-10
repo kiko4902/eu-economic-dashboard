@@ -1,5 +1,5 @@
 {
-  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.12.0/schema.json",
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.13.0/schema.json",
   "name": "map",
   "position": {
     "x": 24,
@@ -412,7 +412,36 @@
               }
             }
           ]
-        }
+        },
+        "howCreated": "User"
+      },
+      {
+        "name": "fdd2398e812f612829d5",
+        "field": {
+          "Column": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "bi_dim_country"
+              }
+            },
+            "Property": "country_name"
+          }
+        },
+        "type": "Categorical"
+      },
+      {
+        "name": "1f029949fe97de9cfbac",
+        "field": {
+          "Measure": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "_Measures"
+              }
+            },
+            "Property": "Annual Value"
+          }
+        },
+        "type": "Advanced"
       }
     ]
   }

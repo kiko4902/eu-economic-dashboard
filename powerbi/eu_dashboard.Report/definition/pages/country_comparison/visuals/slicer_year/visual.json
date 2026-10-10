@@ -1,5 +1,5 @@
 {
-  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.12.0/schema.json",
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.13.0/schema.json",
   "name": "slicer_year",
   "position": {
     "x": 304,
@@ -63,7 +63,7 @@
                 "Version": 2,
                 "From": [
                   {
-                    "Name": "f",
+                    "Name": "b",
                     "Entity": "bi_dim_year",
                     "Type": 0
                   }
@@ -77,7 +77,7 @@
                             "Column": {
                               "Expression": {
                                 "SourceRef": {
-                                  "Source": "f"
+                                  "Source": "b"
                                 }
                               },
                               "Property": "year"

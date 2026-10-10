@@ -227,6 +227,7 @@ table _Measures
 	measure 'Latest Wage Year Text' =
 			VAR LatestYear = [Latest Wage Year]
 			RETURN IF ( NOT ISBLANK ( LatestYear ), FORMAT ( LatestYear, "0" ) )
+		lineageTag: e08c6644-2e46-4028-b4fe-754f2e22fda0
 
 	measure 'Latest Year Text' =
 			VAR LatestYear =
@@ -240,17 +241,19 @@ table _Measures
 			    )
 			RETURN
 			    IF ( NOT ISBLANK ( LatestYear ), FORMAT ( LatestYear, "0" ) & IF ( ProvisionalRows > 0, " (p)" ) )
+		lineageTag: 88163a3a-63c5-4906-ad47-5fbe815fb7df
 
-	measure 'Latest GDP Year Text' =
-			CALCULATE ( [Latest Year Text], REMOVEFILTERS ( bi_dim_indicator ), bi_dim_indicator[indicator_code] = "GDP_PC_PPS" )
+	measure 'Latest GDP Year Text' = CALCULATE ( [Latest Year Text], REMOVEFILTERS ( bi_dim_indicator ), bi_dim_indicator[indicator_code] = "GDP_PC_PPS" )
+		lineageTag: ceb6061b-55ca-4294-b303-3d5a60920b80
 
-	measure 'Country KPI Subtitle' =
-			"Wages and house prices: " & [Latest Wage Year Text] & " · GDP: " & [Latest GDP Year Text]
+	measure 'Country KPI Subtitle' = "Wages and house prices: " & [Latest Wage Year Text] & " · GDP: " & [Latest GDP Year Text]
+		lineageTag: 184af0d5-a1da-4aa5-93cd-b5c4d02fe3eb
 
 	measure 'GDP vs EU Subtitle' =
 			VAR YearText =
 			    CALCULATE ( [Latest GDP Year Text], REMOVEFILTERS ( bi_dim_country ), bi_dim_country[country_code] = "HR" )
 			RETURN "Croatia, " & YearText & " · EU27 = 100"
+		lineageTag: 7671752d-242c-43e4-ae60-a1f162ce57f0
 
 	measure 'Unemployment vs EU Subtitle' =
 			VAR YearText =
@@ -262,30 +265,34 @@ table _Measures
 			        bi_dim_country[country_code] IN { "HR", "EU27_2020" }
 			    )
 			RETURN "Croatia minus EU27, " & YearText
+		lineageTag: 8310d7f4-d1f7-4896-93b8-ef67579e6d51
 
 	measure 'GDP per Capita Text' =
 			VAR Gdp =
 			    CALCULATE ( [Latest Value], REMOVEFILTERS ( bi_dim_indicator ), bi_dim_indicator[indicator_code] = "GDP_PC_PPS" )
 			RETURN IF ( NOT ISBLANK ( Gdp ), FORMAT ( Gdp, "#,0", "en-US" ) )
+		lineageTag: 1e93719f-f9b1-4549-94af-9200e8443366
 
 	measure 'Croatia - EU Gap Text' =
 			VAR Gap = [Croatia - EU Gap]
 			VAR Sign = SWITCH ( TRUE (), Gap < 0, UNICHAR ( 8722 ), Gap > 0, "+", "" )
 			RETURN IF ( NOT ISBLANK ( Gap ), Sign & FORMAT ( ABS ( Gap ), "0.0", "en-US" ) & " pp" )
+		lineageTag: af06185d-10b7-4e26-9754-55107019209f
 
 	measure 'Rank Value Text' =
 			VAR RankValue = SELECTEDVALUE ( v_country_rank[value] )
 			VAR Code = SELECTEDVALUE ( v_country_rank[indicator_code] )
 			VAR Pattern = IF ( Code IN { "WAGE_EUR", "NET_EARNINGS", "GDP_PC_PPS" }, "#,0", "0.0" )
 			RETURN IF ( NOT ISBLANK ( RankValue ), FORMAT ( RankValue, Pattern, "en-US" ) )
+		lineageTag: 4160ba1a-7663-4e77-a226-39eab59452fd
 
-	measure 'House Price Index (Base Year)' =
-			CALCULATE ( [Index Base Year], REMOVEFILTERS ( bi_dim_indicator ), bi_dim_indicator[indicator_code] = "HOUSE_PRICE_INDEX" )
+	measure 'House Price Index (Base Year)' = CALCULATE ( [Index Base Year], REMOVEFILTERS ( bi_dim_indicator ), bi_dim_indicator[indicator_code] = "HOUSE_PRICE_INDEX" )
 		formatString: 0.0
+		lineageTag: c57d085e-fe36-4e80-a3b9-fdc27a6ae141
 
-	measure 'Wage Index (Base Year)' =
-			CALCULATE ( [Index Base Year], REMOVEFILTERS ( bi_dim_indicator ), bi_dim_indicator[indicator_code] = "WAGE_NAC" )
+	measure 'Wage Index (Base Year)' = CALCULATE ( [Index Base Year], REMOVEFILTERS ( bi_dim_indicator ), bi_dim_indicator[indicator_code] = "WAGE_NAC" )
 		formatString: 0.0
+		lineageTag: a77e6818-068e-478a-89d0-2c7a0f1f6ef7
 
 	column Column1
 		dataType: string
