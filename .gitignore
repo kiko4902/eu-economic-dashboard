@@ -39,3 +39,7 @@ data/
 # Power BI: the report files in powerbi/ ARE committed
 !powerbi/*.pbix
 !powerbi/*.pdf
+
+# Power BI project (PBIP): local settings and the imported-data cache are machine-specific
+powerbi/**/.pbi/localSettings.json
+powerbi/**/.pbi/cache.abf

@@ -1,0 +1,109 @@
+table bi_dim_country
+	lineageTag: 0ca0f750-b692-4a1e-8190-066c0597f2f1
+
+	column country_code
+		dataType: string
+		lineageTag: f1f59aa6-59de-4031-9ac6-52e02a8a15e9
+		summarizeBy: none
+		sourceColumn: country_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column country_name
+		dataType: string
+		lineageTag: 5c2a1dd9-6e2d-45b0-81b4-a6ed75b1bc8f
+		dataCategory: Country
+		summarizeBy: none
+		sourceColumn: country_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column country_short_name
+		dataType: string
+		lineageTag: 55d98fe0-ca0d-4d6c-b5b6-5fb241c84ce6
+		summarizeBy: none
+		sourceColumn: country_short_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column iso_alpha2
+		dataType: string
+		lineageTag: f0f63da4-0dd0-4ce8-871d-b1493b791307
+		summarizeBy: none
+		sourceColumn: iso_alpha2
+
+		annotation SummarizationSetBy = Automatic
+
+	column region
+		dataType: string
+		lineageTag: e8769a58-d7ec-4251-bbfc-d4b650845228
+		summarizeBy: none
+		sourceColumn: region
+
+		annotation SummarizationSetBy = Automatic
+
+	column is_eu_member
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: 2b484756-3ffc-493e-a1c4-42e4331d9301
+		summarizeBy: none
+		sourceColumn: is_eu_member
+
+		annotation SummarizationSetBy = Automatic
+
+	column is_aggregate
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: 892a2e4f-1aa5-48cc-b86b-59be0c2ccff4
+		summarizeBy: none
+		sourceColumn: is_aggregate
+
+		annotation SummarizationSetBy = Automatic
+
+	column euro_adoption_year
+		dataType: int64
+		formatString: 0
+		lineageTag: 7921cf81-e8fd-4db2-9e62-23beb133d24e
+		summarizeBy: sum
+		sourceColumn: euro_adoption_year
+
+		annotation SummarizationSetBy = Automatic
+
+	column comparison_group
+		dataType: string
+		lineageTag: 242f77d0-9e27-4ab2-bd43-74d274624c90
+		summarizeBy: none
+		sourceColumn: comparison_group
+
+		annotation SummarizationSetBy = Automatic
+
+	column highlight_colour
+		dataType: string
+		lineageTag: 9ab53ca4-89f1-4079-9c3b-30a7b8798a13
+		summarizeBy: none
+		sourceColumn: highlight_colour
+
+		annotation SummarizationSetBy = Automatic
+
+	column sort_order
+		dataType: int64
+		formatString: 0
+		lineageTag: dfc65a00-473c-4820-ab7b-3db57361a5ee
+		summarizeBy: none
+		sourceColumn: sort_order
+
+		annotation SummarizationSetBy = User
+
+	partition bi_dim_country = m
+		mode: import
+		source =
+				let
+				    Source = PostgreSQL.Database("127.0.0.1:5432", "eu_dashboard"),
+				    analytics_bi_dim_country = Source{[Schema="analytics",Item="bi_dim_country"]}[Data]
+				in
+				    analytics_bi_dim_country
+
+	changedProperty = Name
+
+	annotation PBI_ResultType = Table
+

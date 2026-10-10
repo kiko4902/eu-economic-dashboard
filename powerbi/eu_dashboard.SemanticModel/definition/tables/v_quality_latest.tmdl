@@ -1,0 +1,116 @@
+table v_quality_latest
+	lineageTag: edbfdde9-0f2a-44d2-b525-266afd592825
+
+	column run_id
+		dataType: int64
+		formatString: 0
+		lineageTag: 8caf35c1-4896-46bc-8715-99e8d655ca13
+		summarizeBy: sum
+		sourceColumn: run_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column run_started_at
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: d7d021eb-4bbb-4628-9c9b-4d90a3ad7798
+		summarizeBy: none
+		sourceColumn: run_started_at
+
+		annotation SummarizationSetBy = Automatic
+
+	column run_finished_at
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: cca862a9-8fae-474f-ab48-1221b992779a
+		summarizeBy: none
+		sourceColumn: run_finished_at
+
+		annotation SummarizationSetBy = Automatic
+
+	column run_status
+		dataType: string
+		lineageTag: 68543f69-17df-4178-81ea-3691365957e9
+		summarizeBy: none
+		sourceColumn: run_status
+
+		annotation SummarizationSetBy = Automatic
+
+	column check_name
+		dataType: string
+		lineageTag: 67b195a7-3bfc-4831-b4ef-b4ec026bd60f
+		summarizeBy: none
+		sourceColumn: check_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column severity
+		dataType: string
+		lineageTag: 73f3abcc-b275-4e63-8c77-fefc589b34c0
+		summarizeBy: none
+		sourceColumn: severity
+
+		annotation SummarizationSetBy = Automatic
+
+	column status
+		dataType: string
+		lineageTag: 5324bbc0-a2ef-41a1-bee0-f4e20d985b2a
+		summarizeBy: none
+		sourceColumn: status
+
+		annotation SummarizationSetBy = Automatic
+
+	column subject
+		dataType: string
+		lineageTag: 76021a7d-c756-4cd5-8410-ad0ba00ca5ca
+		summarizeBy: none
+		sourceColumn: subject
+
+		annotation SummarizationSetBy = Automatic
+
+	column subject_type
+		dataType: string
+		lineageTag: 5900eace-121e-4627-a61e-6c26b457db32
+		summarizeBy: none
+		sourceColumn: subject_type
+
+		annotation SummarizationSetBy = Automatic
+
+	column issue_count
+		dataType: int64
+		formatString: 0
+		lineageTag: 58103f75-bb84-4270-98ff-6a478b3e1920
+		summarizeBy: sum
+		sourceColumn: issue_count
+
+		annotation SummarizationSetBy = Automatic
+
+	column message
+		dataType: string
+		lineageTag: ad941ae9-d4a4-47e4-a244-248d08c62123
+		summarizeBy: none
+		sourceColumn: message
+
+		annotation SummarizationSetBy = Automatic
+
+	column check_description
+		dataType: string
+		lineageTag: bca625fe-619a-4051-9802-f5997b8ab9a3
+		summarizeBy: none
+		sourceColumn: check_description
+
+		annotation SummarizationSetBy = Automatic
+
+	partition v_quality_latest = m
+		mode: import
+		source =
+				let
+				    Source = PostgreSQL.Database("127.0.0.1:5432", "eu_dashboard"),
+				    analytics_v_quality_latest = Source{[Schema="analytics",Item="v_quality_latest"]}[Data]
+				in
+				    analytics_v_quality_latest
+
+	changedProperty = Name
+
+	annotation PBI_ResultType = Table
+

@@ -1,0 +1,23 @@
+table 'Base Year'
+	lineageTag: e5428a6f-f3b7-4a52-92e5-1d90852f0ed2
+
+	column 'Base Year'
+		formatString: 0
+		lineageTag: 04320b5c-8a4e-4a10-a187-95151d190182
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [Base Year]
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Base Year' = calculated
+		mode: import
+		source =
+				
+				SELECTCOLUMNS (
+				    FILTER ( 'bi_dim_year', 'bi_dim_year'[has_annual_data] ),
+				    "Base Year", 'bi_dim_year'[year]
+				)
+
+	annotation PBI_Id = 6d4d012e9096438bb429bfa32e4125b2
+

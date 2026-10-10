@@ -1,0 +1,156 @@
+table v_country_rank
+	lineageTag: 845ee0d3-b9b5-4f55-b9f3-8c27aaa8f3d1
+
+	column country_code
+		dataType: string
+		isHidden
+		lineageTag: 8c64b5ec-0605-49fd-aa17-a3c6ed26dda6
+		summarizeBy: none
+		sourceColumn: country_code
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column country_name
+		dataType: string
+		lineageTag: 77ffb2ff-355d-4792-b80a-d11806e072c4
+		summarizeBy: none
+		sourceColumn: country_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column indicator_code
+		dataType: string
+		isHidden
+		lineageTag: 6606ead7-926a-43cc-a431-f261f9d37269
+		summarizeBy: none
+		sourceColumn: indicator_code
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column indicator_name
+		dataType: string
+		lineageTag: de61caac-d41e-4f4f-b2b3-98439fa70c29
+		summarizeBy: none
+		sourceColumn: indicator_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column unit
+		dataType: string
+		lineageTag: b6c2228f-e72e-48f9-a6ce-d37f3fb6c4d7
+		summarizeBy: none
+		sourceColumn: unit
+
+		annotation SummarizationSetBy = Automatic
+
+	column year
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 3bee3d57-60fc-4435-8482-7ca19d23d740
+		summarizeBy: none
+		sourceColumn: year
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column value
+		dataType: double
+		lineageTag: 5f45e9e4-d47f-4fed-b9ce-552a25a13389
+		summarizeBy: sum
+		sourceColumn: value
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column higher_is_better
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: 476f1aa7-5156-4489-88c9-c74667eaee8c
+		summarizeBy: none
+		sourceColumn: higher_is_better
+
+		annotation SummarizationSetBy = Automatic
+
+	column country_rank
+		dataType: int64
+		formatString: 0
+		lineageTag: a5f58964-85ef-488c-8ce6-09e6fbd934ec
+		summarizeBy: sum
+		sourceColumn: country_rank
+
+		annotation SummarizationSetBy = Automatic
+
+	column countries_ranked
+		dataType: int64
+		formatString: 0
+		lineageTag: ac04bbf7-7a63-441b-8168-dd8c58d3f8c6
+		summarizeBy: sum
+		sourceColumn: countries_ranked
+
+		annotation SummarizationSetBy = Automatic
+
+	column has_provisional
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: 7ee60dfe-2ab7-4b29-a78a-dc96dba93dcf
+		summarizeBy: none
+		sourceColumn: has_provisional
+
+		annotation SummarizationSetBy = Automatic
+
+	column has_estimated
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: 26ba27b3-ca99-416d-a7f6-fcd671854e21
+		summarizeBy: none
+		sourceColumn: has_estimated
+
+		annotation SummarizationSetBy = Automatic
+
+	column has_break
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: a7e33871-814c-48c6-a3f0-b3b47dec8782
+		summarizeBy: none
+		sourceColumn: has_break
+
+		annotation SummarizationSetBy = Automatic
+
+	column ranking_rule
+		dataType: string
+		lineageTag: 9e958060-7208-4505-a44c-6e143c6a997f
+		summarizeBy: none
+		sourceColumn: ranking_rule
+
+		annotation SummarizationSetBy = Automatic
+
+	column target_value
+		dataType: double
+		lineageTag: 26878d6d-0c1d-4057-a1f7-5aff140508e1
+		summarizeBy: sum
+		sourceColumn: target_value
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	partition v_country_rank = m
+		mode: import
+		source =
+				let
+				    Source = PostgreSQL.Database("127.0.0.1:5432", "eu_dashboard"),
+				    analytics_v_country_rank = Source{[Schema="analytics",Item="v_country_rank"]}[Data]
+				in
+				    analytics_v_country_rank
+
+	changedProperty = Name
+
+	annotation PBI_ResultType = Table
+

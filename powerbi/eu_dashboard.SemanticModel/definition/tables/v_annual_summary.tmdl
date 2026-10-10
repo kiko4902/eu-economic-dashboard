@@ -1,0 +1,154 @@
+table v_annual_summary
+	lineageTag: 3431b97d-faf7-456b-8191-c496b6aa7b5c
+
+	column country_code
+		dataType: string
+		isHidden
+		lineageTag: c827fe07-8fe5-4fca-8dc7-142933f51483
+		summarizeBy: none
+		sourceColumn: country_code
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column country_name
+		dataType: string
+		lineageTag: ce02b1ef-b412-4782-8c40-2054f72a4b06
+		summarizeBy: none
+		sourceColumn: country_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column region
+		dataType: string
+		lineageTag: 654325d4-b664-4df8-a338-248dd5068603
+		summarizeBy: none
+		sourceColumn: region
+
+		annotation SummarizationSetBy = Automatic
+
+	column is_eu_member
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: 98b4a3f0-0ad2-4c1e-8ae0-f74bebe05d14
+		summarizeBy: none
+		sourceColumn: is_eu_member
+
+		annotation SummarizationSetBy = Automatic
+
+	column is_aggregate
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: 57345263-55a1-4a43-82d8-e4c3cd345edf
+		summarizeBy: none
+		sourceColumn: is_aggregate
+
+		annotation SummarizationSetBy = Automatic
+
+	column indicator_code
+		dataType: string
+		isHidden
+		lineageTag: eede7e18-567b-4075-945d-e9a208d96e0b
+		summarizeBy: none
+		sourceColumn: indicator_code
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column indicator_name
+		dataType: string
+		lineageTag: bc91d956-3fa0-4746-92eb-887442b045e1
+		summarizeBy: none
+		sourceColumn: indicator_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column unit
+		dataType: string
+		lineageTag: 7688aa31-6fb5-4d17-b8bf-9eb2c584e3c2
+		summarizeBy: none
+		sourceColumn: unit
+
+		annotation SummarizationSetBy = Automatic
+
+	column year
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: d69a59c5-75c6-4114-909c-5c6871f337e0
+		summarizeBy: none
+		sourceColumn: year
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column value
+		dataType: double
+		lineageTag: 218eee78-242e-4d2b-9a68-954b1ddfcafc
+		summarizeBy: sum
+		sourceColumn: value
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column aggregation_method
+		dataType: string
+		lineageTag: fc6fb7a6-e1bc-491b-b20f-ef8882bd618c
+		summarizeBy: none
+		sourceColumn: aggregation_method
+
+		annotation SummarizationSetBy = Automatic
+
+	column observation_count
+		dataType: int64
+		formatString: 0
+		lineageTag: ac0d0807-d8a6-4711-89cf-6202aa0f362d
+		summarizeBy: sum
+		sourceColumn: observation_count
+
+		annotation SummarizationSetBy = Automatic
+
+	column has_provisional
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: 26fde1fe-1911-47a7-b1ea-47d020c779f9
+		summarizeBy: none
+		sourceColumn: has_provisional
+
+		annotation SummarizationSetBy = Automatic
+
+	column has_estimated
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: ae599c7f-b2b6-4e69-b649-852ebf1394fa
+		summarizeBy: none
+		sourceColumn: has_estimated
+
+		annotation SummarizationSetBy = Automatic
+
+	column has_break
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: 273619d2-8342-4e6b-bf64-79245b481451
+		summarizeBy: none
+		sourceColumn: has_break
+
+		annotation SummarizationSetBy = Automatic
+
+	partition v_annual_summary = m
+		mode: import
+		source =
+				let
+				    Source = PostgreSQL.Database("127.0.0.1:5432", "eu_dashboard"),
+				    analytics_v_annual_summary = Source{[Schema="analytics",Item="v_annual_summary"]}[Data]
+				in
+				    analytics_v_annual_summary
+
+	changedProperty = Name
+
+	annotation PBI_ResultType = Table
+

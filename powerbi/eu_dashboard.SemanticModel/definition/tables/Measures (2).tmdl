@@ -1,0 +1,248 @@
+table 'Measures (2)'
+	lineageTag: 2a9de782-1074-4fe7-99e8-74a300434e9d
+
+	measure 'Annual Value' = IF ( COUNTROWS ( v_annual_summary ) = 1, SUM ( v_annual_summary[value] ) )
+		formatString: 0.0
+		lineageTag: 383f5cdb-fe53-475a-a93d-aa617b953937
+
+	measure 'Period Value' = IF ( COUNTROWS ( v_observations ) = 1, SUM ( v_observations[value] ) )
+		formatString: 0.0
+		lineageTag: bae8190e-b929-4e1f-865f-b402f15c1e1e
+
+	measure 'Wage NAC' =
+			
+			CALCULATE ( [Annual Value], REMOVEFILTERS ( bi_dim_indicator ), bi_dim_indicator[indicator_code] = "WAGE_NAC" )
+		formatString: 0.0
+		lineageTag: 1354a91f-f538-4529-ae44-1ef026c7bcc5
+
+	measure 'HICP Index' =
+			
+			CALCULATE ( [Annual Value], REMOVEFILTERS ( bi_dim_indicator ), bi_dim_indicator[indicator_code] = "HICP_INDEX" )
+		formatString: 0.0
+		lineageTag: 301baaa4-f972-472f-8944-12ac7f5e5740
+
+	measure 'HICP Inflation' =
+			
+			CALCULATE ( [Annual Value], REMOVEFILTERS ( bi_dim_indicator ), bi_dim_indicator[indicator_code] = "HICP_INFLATION" )
+		formatString: 0.0
+		lineageTag: 575e8aaa-1a1b-4671-bce4-48a64619e0f6
+
+	measure 'House Price Index' =
+			
+			CALCULATE ( [Annual Value], REMOVEFILTERS ( bi_dim_indicator ), bi_dim_indicator[indicator_code] = "HOUSE_PRICE_INDEX" )
+		formatString: 0.0
+		lineageTag: 82933727-15f0-4416-93a4-868648a7485e
+
+	measure 'Latest Wage Year' =
+			
+			CALCULATE (
+			    MAX ( v_annual_summary[year] ),
+			    REMOVEFILTERS ( bi_dim_year ),
+			    REMOVEFILTERS ( bi_dim_indicator ),
+			    bi_dim_indicator[indicator_code] = "WAGE_NAC"
+			)
+		formatString: 0
+		lineageTag: 92fda2d1-00a8-4d02-bb68-0fd26758f2b9
+
+	measure 'Real Wage Growth %' =
+			
+			VAR ThisYear = SELECTEDVALUE ( bi_dim_year[year] )
+			VAR Wage = [Wage NAC]
+			VAR WagePrev =
+			    CALCULATE ( [Wage NAC], REMOVEFILTERS ( bi_dim_year ), bi_dim_year[year] = ThisYear - 1 )
+			VAR Inflation = [HICP Inflation]
+			RETURN
+			    IF (
+			        NOT ISBLANK ( Wage ) && NOT ISBLANK ( WagePrev ) && NOT ISBLANK ( Inflation ),
+			        DIVIDE ( Wage, WagePrev ) / ( 1 + Inflation / 100 ) - 1
+			    )
+		formatString: 0.0\ %;-0.0\ %;0.0\ %
+		lineageTag: ea5a452d-0243-4b08-b126-625e08d40745
+
+	measure 'Real Wage Index 2010' =
+			
+			VAR Wage = [Wage NAC]
+			VAR Wage2010 =
+			    CALCULATE ( [Wage NAC], REMOVEFILTERS ( bi_dim_year ), bi_dim_year[year] = 2010 )
+			VAR Prices = [HICP Index]
+			VAR Prices2010 =
+			    CALCULATE ( [HICP Index], REMOVEFILTERS ( bi_dim_year ), bi_dim_year[year] = 2010 )
+			RETURN
+			    IF (
+			        NOT ISBLANK ( Wage ) && NOT ISBLANK ( Wage2010 )
+			            && NOT ISBLANK ( Prices ) && NOT ISBLANK ( Prices2010 ),
+			        DIVIDE ( Wage, Wage2010 ) / DIVIDE ( Prices, Prices2010 ) * 100
+			    )
+		formatString: 0.0
+		lineageTag: 70beab31-6c33-494c-9d91-a42f62e59d39
+
+	measure 'Real Wage Index (latest)' =
+			
+			VAR LatestYear = [Latest Wage Year]
+			RETURN
+			    CALCULATE ( [Real Wage Index 2010], REMOVEFILTERS ( bi_dim_year ), bi_dim_year[year] = LatestYear )
+		formatString: 0.0
+		lineageTag: 7b672ba6-fe91-4a5f-a087-feb9ceffd0a6
+
+	measure 'Housing Affordability Ratio' =
+			
+			VAR Houses = [House Price Index]
+			VAR Houses2015 =
+			    CALCULATE ( [House Price Index], REMOVEFILTERS ( bi_dim_year ), bi_dim_year[year] = 2015 )
+			VAR Wage = [Wage NAC]
+			VAR Wage2015 =
+			    CALCULATE ( [Wage NAC], REMOVEFILTERS ( bi_dim_year ), bi_dim_year[year] = 2015 )
+			RETURN
+			    IF (
+			        NOT ISBLANK ( Houses ) && NOT ISBLANK ( Houses2015 )
+			            && NOT ISBLANK ( Wage ) && NOT ISBLANK ( Wage2015 ),
+			        DIVIDE ( Houses, Houses2015 ) / DIVIDE ( Wage, Wage2015 ) * 100
+			    )
+		formatString: 0.0
+		lineageTag: ae4a3fe3-ebb1-44bb-8c4f-7c75586efc0b
+
+	measure 'Housing Affordability Ratio (latest)' =
+			
+			VAR LatestYear = [Latest Wage Year]
+			RETURN
+			    CALCULATE ( [Housing Affordability Ratio], REMOVEFILTERS ( bi_dim_year ), bi_dim_year[year] = LatestYear )
+		formatString: 0.0
+		lineageTag: 4113f67f-c176-403e-8149-c10956283036
+
+	measure 'Latest Year' =
+			
+			CALCULATE ( MAX ( v_annual_summary[year] ), REMOVEFILTERS ( bi_dim_year ) )
+		formatString: 0
+		lineageTag: 7d92aa73-e5bd-44c7-8563-66373ae11bbf
+
+	measure 'Latest Value' =
+			
+			VAR LatestYear =
+			    CALCULATE ( MAX ( v_annual_summary[year] ), REMOVEFILTERS ( bi_dim_year ) )
+			RETURN
+			    CALCULATE ( [Annual Value], REMOVEFILTERS ( bi_dim_year ), bi_dim_year[year] = LatestYear )
+		formatString: 0.0
+		lineageTag: 5be9e89b-fc9e-483e-ae89-a26e8d352cb8
+
+	measure 'YoY %' =
+			
+			VAR ThisYear = SELECTEDVALUE ( bi_dim_year[year] )
+			VAR Curr = [Annual Value]
+			VAR Prev =
+			    CALCULATE ( [Annual Value], REMOVEFILTERS ( bi_dim_year ), bi_dim_year[year] = ThisYear - 1 )
+			VAR IsRate = SELECTEDVALUE ( bi_dim_indicator[is_rate], FALSE () )
+			RETURN
+			    IF ( NOT IsRate && NOT ISBLANK ( Curr ) && NOT ISBLANK ( Prev ), DIVIDE ( Curr, Prev ) - 1 )
+		formatString: 0.0\ %;-0.0\ %;0.0\ %
+		lineageTag: 9104e58d-98bd-44fa-8bf1-f533a7c19de0
+
+	measure 'YoY Change' =
+			
+			VAR ThisYear = SELECTEDVALUE ( bi_dim_year[year] )
+			VAR Curr = [Annual Value]
+			VAR Prev =
+			    CALCULATE ( [Annual Value], REMOVEFILTERS ( bi_dim_year ), bi_dim_year[year] = ThisYear - 1 )
+			RETURN
+			    IF ( NOT ISBLANK ( Curr ) && NOT ISBLANK ( Prev ), Curr - Prev )
+		formatString: 0.0
+		lineageTag: 4c169d6f-e9f4-494e-a302-a451446b7239
+
+	measure 'Change Since Base Year %' =
+			
+			VAR BaseYear = SELECTEDVALUE ( 'Base Year'[Base Year], 2010 )
+			VAR ThisYear =
+			    IF (
+			        HASONEVALUE ( bi_dim_year[year] ),
+			        VALUES ( bi_dim_year[year] ),
+			        CALCULATE ( MAX ( v_annual_summary[year] ), REMOVEFILTERS ( bi_dim_year ) )
+			    )
+			VAR Curr =
+			    CALCULATE ( [Annual Value], REMOVEFILTERS ( bi_dim_year ), bi_dim_year[year] = ThisYear )
+			VAR Base =
+			    CALCULATE ( [Annual Value], REMOVEFILTERS ( bi_dim_year ), bi_dim_year[year] = BaseYear )
+			VAR IsRate = SELECTEDVALUE ( bi_dim_indicator[is_rate], FALSE () )
+			RETURN
+			    IF ( NOT IsRate && NOT ISBLANK ( Curr ) && NOT ISBLANK ( Base ), DIVIDE ( Curr, Base ) - 1 )
+		formatString: 0.0\ %;-0.0\ %;0.0\ %
+		lineageTag: 5d094686-359b-491a-ba5b-5042c5e68a1e
+
+	measure 'Index Base Year' =
+			
+			VAR Change = [Change Since Base Year %]
+			RETURN IF ( NOT ISBLANK ( Change ), ( 1 + Change ) * 100 )
+		formatString: 0.0
+		lineageTag: dd127a03-22c0-4a19-a9b1-4e6abbfcc295
+
+	measure 'Croatia Value' =
+			
+			CALCULATE ( [Annual Value], REMOVEFILTERS ( bi_dim_country ), bi_dim_country[country_code] = "HR" )
+		formatString: 0.0
+		lineageTag: c6bfba07-dee6-46c2-9f79-13cfec964a9e
+
+	measure 'EU Value' =
+			
+			CALCULATE ( [Annual Value], REMOVEFILTERS ( bi_dim_country ), bi_dim_country[country_code] = "EU27_2020" )
+		formatString: 0.0
+		lineageTag: f97d8f21-95c4-42bd-97b8-e7f172f33614
+
+	measure 'Croatia vs EU Index' =
+			
+			DIVIDE ( [Croatia Value], [EU Value] ) * 100
+		formatString: 0.0
+		lineageTag: 44344237-d088-406a-9e3f-791ba81488db
+
+	measure 'Croatia - EU Gap' =
+			
+			VAR Hr = [Croatia Value]
+			VAR Eu = [EU Value]
+			RETURN IF ( NOT ISBLANK ( Hr ) && NOT ISBLANK ( Eu ), Hr - Eu )
+		formatString: 0.0
+		lineageTag: f2a1153f-d4ec-48fb-b352-6869e2c6529f
+
+	measure 'Index vs EU' =
+			
+			DIVIDE ( [Annual Value], [EU Value] ) * 100
+		formatString: 0.0
+		lineageTag: 897f940d-ab78-4757-aa22-c6188367a1d6
+
+	measure 'Checks Passed' = CALCULATE ( COUNTROWS ( v_quality_latest ), v_quality_latest[status] = "pass" )
+		formatString: 0
+		lineageTag: ff48076a-457d-4357-9576-40f8cfc3a805
+
+	measure 'Checks Failed' = CALCULATE ( COUNTROWS ( v_quality_latest ), v_quality_latest[status] = "fail" )
+		formatString: 0
+		lineageTag: 6a69e194-3d23-4819-88a6-cb3d31d82e36
+
+	measure 'Checks Warned' = CALCULATE ( COUNTROWS ( v_quality_latest ), v_quality_latest[status] = "warn" )
+		formatString: 0
+		lineageTag: cb0fda2c-804b-4581-9b0a-12c073186d02
+
+	measure 'Quality Run Status' = SELECTEDVALUE ( v_quality_latest[run_status], "no run" )
+		lineageTag: d82290bb-2d56-47e3-b812-ad07c0cfce24
+
+	measure 'Quality Run Time' = MAX ( v_quality_latest[run_finished_at] )
+		formatString: General Date
+		lineageTag: ea141a82-6c38-4afe-96c5-a11bc9833dc1
+
+	column Column1
+		dataType: string
+		isHidden
+		lineageTag: bfc2bddd-193d-4fc5-bd5d-5c01d883b280
+		summarizeBy: none
+		sourceColumn: Column1
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Measures (2)' = m
+		mode: import
+		source =
+				let
+				    Source = Table.FromRows(Json.Document(Binary.Decompress(Binary.FromText("i44FAA==", BinaryEncoding.Base64), Compression.Deflate)), let _t = ((type nullable text) meta [Serialized.Text = true]) in type table [Column1 = _t]),
+				    #"Changed Type" = Table.TransformColumnTypes(Source,{{"Column1", type text}})
+				in
+				    #"Changed Type"
+
+	annotation PBI_ResultType = Table
+

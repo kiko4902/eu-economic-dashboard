@@ -1,0 +1,224 @@
+table v_observations
+	lineageTag: f4ee6c26-148b-4333-abfa-c9aaabbdaf63
+
+	column country_code
+		dataType: string
+		isHidden
+		lineageTag: 8c6e57fa-0192-4829-b90e-02603abfb89c
+		summarizeBy: none
+		sourceColumn: country_code
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column country_name
+		dataType: string
+		lineageTag: bd626c81-33da-4b19-a128-87af5e1a20d3
+		summarizeBy: none
+		sourceColumn: country_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column iso_alpha2
+		dataType: string
+		lineageTag: 8f934c27-2e5c-4641-9070-f2afa7874411
+		summarizeBy: none
+		sourceColumn: iso_alpha2
+
+		annotation SummarizationSetBy = Automatic
+
+	column region
+		dataType: string
+		lineageTag: 178d732a-a7f8-438a-bdce-86391d40b42b
+		summarizeBy: none
+		sourceColumn: region
+
+		annotation SummarizationSetBy = Automatic
+
+	column is_eu_member
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: 9c1bcbab-bb4c-4c19-9abd-f4e35017153f
+		summarizeBy: none
+		sourceColumn: is_eu_member
+
+		annotation SummarizationSetBy = Automatic
+
+	column is_aggregate
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: 46381bce-c962-4755-902d-ae010dc55548
+		summarizeBy: none
+		sourceColumn: is_aggregate
+
+		annotation SummarizationSetBy = Automatic
+
+	column euro_adoption_year
+		dataType: int64
+		formatString: 0
+		lineageTag: 763ce92c-ee47-4196-9057-c3912a794120
+		summarizeBy: sum
+		sourceColumn: euro_adoption_year
+
+		annotation SummarizationSetBy = Automatic
+
+	column is_euro_area_member
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: 64374874-518d-4d63-8d9e-866fd23fc6ff
+		summarizeBy: none
+		sourceColumn: is_euro_area_member
+
+		annotation SummarizationSetBy = Automatic
+
+	column indicator_code
+		dataType: string
+		isHidden
+		lineageTag: 856e30e8-8d03-4bf4-b81d-501ec1d6fe5e
+		summarizeBy: none
+		sourceColumn: indicator_code
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column indicator_name
+		dataType: string
+		lineageTag: bf4d7e15-0fe4-40ba-b4fb-b5bb52156f91
+		summarizeBy: none
+		sourceColumn: indicator_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column unit
+		dataType: string
+		lineageTag: 4ee0bd92-f453-4484-a2d8-eb79457e46f3
+		summarizeBy: none
+		sourceColumn: unit
+
+		annotation SummarizationSetBy = Automatic
+
+	column frequency
+		dataType: string
+		lineageTag: 20f2ff33-a6e7-4782-a6e6-fa091dc1679c
+		summarizeBy: none
+		sourceColumn: frequency
+
+		annotation SummarizationSetBy = Automatic
+
+	column period_date
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: 331b3698-01f0-4af7-95e0-3474008c0613
+		summarizeBy: none
+		sourceColumn: period_date
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column year
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 778e9960-21f9-49a6-b179-12412f184c34
+		summarizeBy: none
+		sourceColumn: year
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column quarter
+		dataType: int64
+		formatString: 0
+		lineageTag: e42caa79-49ee-4e86-a2ea-0513cd332234
+		summarizeBy: sum
+		sourceColumn: quarter
+
+		annotation SummarizationSetBy = Automatic
+
+	column month
+		dataType: int64
+		formatString: 0
+		lineageTag: 661b94aa-46e4-4185-bdf3-e310675c38fa
+		summarizeBy: sum
+		sourceColumn: month
+
+		annotation SummarizationSetBy = Automatic
+
+	column period_label
+		dataType: string
+		lineageTag: b49ded6d-4fdb-4803-ac87-0d7972286c87
+		summarizeBy: none
+		sourceColumn: period_label
+
+		annotation SummarizationSetBy = Automatic
+
+	column value
+		dataType: double
+		lineageTag: fc3e02aa-77da-42c2-8406-0d03c5838dbc
+		summarizeBy: sum
+		sourceColumn: value
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column flag_code
+		dataType: string
+		lineageTag: a51cc669-c562-45a7-8d38-bd08cb93c7ee
+		summarizeBy: none
+		sourceColumn: flag_code
+
+		annotation SummarizationSetBy = Automatic
+
+	column flag_description
+		dataType: string
+		lineageTag: a1f67d70-1507-4079-a07c-a1da1a5af5f1
+		summarizeBy: none
+		sourceColumn: flag_description
+
+		annotation SummarizationSetBy = Automatic
+
+	column is_provisional
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: b2e8367e-0251-47cf-bafa-fd9835821674
+		summarizeBy: none
+		sourceColumn: is_provisional
+
+		annotation SummarizationSetBy = Automatic
+
+	column is_estimated
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: f9a48679-5d1d-498e-b1f9-ff402d73aba9
+		summarizeBy: none
+		sourceColumn: is_estimated
+
+		annotation SummarizationSetBy = Automatic
+
+	column is_break
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: f1270724-6335-4e38-bce9-10b1253b4328
+		summarizeBy: none
+		sourceColumn: is_break
+
+		annotation SummarizationSetBy = Automatic
+
+	partition v_observations = m
+		mode: import
+		source =
+				let
+				    Source = PostgreSQL.Database("127.0.0.1:5432", "eu_dashboard"),
+				    analytics_v_observations = Source{[Schema="analytics",Item="v_observations"]}[Data]
+				in
+				    analytics_v_observations
+
+	changedProperty = Name
+
+	annotation PBI_ResultType = Table
+

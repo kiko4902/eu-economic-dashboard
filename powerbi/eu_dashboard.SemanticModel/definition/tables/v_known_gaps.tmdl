@@ -1,0 +1,87 @@
+table v_known_gaps
+	lineageTag: 8fa31f68-2ffe-4a29-95a8-2f08fbe74b79
+
+	column indicator_code
+		dataType: string
+		isHidden
+		lineageTag: 7a8aca48-04eb-4044-939d-75b9e8de6ce9
+		summarizeBy: none
+		sourceColumn: indicator_code
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column country_code
+		dataType: string
+		isHidden
+		lineageTag: 12883213-ad14-4e79-acec-26b7daaa0c9c
+		summarizeBy: none
+		sourceColumn: country_code
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column gap_type
+		dataType: string
+		lineageTag: e5caee05-ac0f-4878-8bf7-a97a154d8806
+		summarizeBy: none
+		sourceColumn: gap_type
+
+		annotation SummarizationSetBy = Automatic
+
+	column gap_description
+		dataType: string
+		lineageTag: 86456239-be4a-4fb4-9a37-819059dab1e6
+		summarizeBy: none
+		sourceColumn: gap_description
+
+		annotation SummarizationSetBy = Automatic
+
+	column from_period
+		dataType: string
+		lineageTag: a43ef3f0-f334-422d-b3b1-565e651063bc
+		summarizeBy: none
+		sourceColumn: from_period
+
+		annotation SummarizationSetBy = Automatic
+
+	column to_period
+		dataType: string
+		lineageTag: 4e799794-0c31-4d4f-a4a9-ca456c28a7e7
+		summarizeBy: none
+		sourceColumn: to_period
+
+		annotation SummarizationSetBy = Automatic
+
+	column reason
+		dataType: string
+		lineageTag: 89b9512e-c706-47af-84fc-284208af1692
+		summarizeBy: none
+		sourceColumn: reason
+
+		annotation SummarizationSetBy = Automatic
+
+	column run_id
+		dataType: int64
+		formatString: 0
+		lineageTag: a1c4e052-a9f7-43f1-8dc3-fa9958dac418
+		summarizeBy: sum
+		sourceColumn: run_id
+
+		annotation SummarizationSetBy = Automatic
+
+	partition v_known_gaps = m
+		mode: import
+		source =
+				let
+				    Source = PostgreSQL.Database("127.0.0.1:5432", "eu_dashboard"),
+				    analytics_v_known_gaps = Source{[Schema="analytics",Item="v_known_gaps"]}[Data]
+				in
+				    analytics_v_known_gaps
+
+	changedProperty = Name
+
+	annotation PBI_ResultType = Table
+

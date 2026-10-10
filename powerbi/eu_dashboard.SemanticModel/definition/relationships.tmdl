@@ -1,0 +1,44 @@
+relationship 75cacfb2-4bc3-ea4d-da09-7fc362bd7e07
+	fromColumn: v_annual_summary.country_code
+	toColumn: bi_dim_country.country_code
+
+relationship facaea3f-dbb7-19d7-b475-3f13372791c0
+	fromColumn: v_observations.country_code
+	toColumn: bi_dim_country.country_code
+
+relationship b543d27a-9497-09ac-1304-5dbe2ca7885d
+	fromColumn: v_country_rank.country_code
+	toColumn: bi_dim_country.country_code
+
+relationship 2096f1b3-b984-67dd-cb5f-796ae264f7be
+	fromColumn: v_known_gaps.country_code
+	toColumn: bi_dim_country.country_code
+
+relationship 46db27bd-4b58-fd33-d854-12036f555200
+	fromColumn: v_annual_summary.year
+	toColumn: bi_dim_year.year
+
+relationship e86bd47c-4587-7f47-1ce4-89b0fa8b336f
+	fromColumn: v_observations.year
+	toColumn: bi_dim_year.year
+
+relationship f2bb23a5-c4d4-7eee-8163-a090135d7be9
+	fromColumn: v_country_rank.year
+	toColumn: bi_dim_year.year
+
+relationship 6688036c-117e-1a45-29ac-bb61b52c1ef4
+	fromColumn: v_annual_summary.indicator_code
+	toColumn: bi_dim_indicator.indicator_code
+
+relationship ed75c249-895a-8663-05dd-66182b71d08f
+	fromColumn: v_observations.indicator_code
+	toColumn: bi_dim_indicator.indicator_code
+
+relationship 163dd320-17c7-133b-c686-a2b707931933
+	fromColumn: v_country_rank.indicator_code
+	toColumn: bi_dim_indicator.indicator_code
+
+relationship 16c12932-e7be-1ad5-5378-d6c5899170ab
+	fromColumn: v_known_gaps.indicator_code
+	toColumn: bi_dim_indicator.indicator_code
+

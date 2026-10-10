@@ -1,0 +1,51 @@
+table bi_dim_year
+	lineageTag: 1370d834-79e3-4897-889c-0ebc4e6e51f1
+
+	column year
+		dataType: int64
+		formatString: 0
+		lineageTag: c2cf636d-3cfb-42e0-b959-223e602eb717
+		summarizeBy: none
+		sourceColumn: year
+
+		annotation SummarizationSetBy = Automatic
+
+	column year_label
+		dataType: string
+		lineageTag: 97e6a538-08de-44fa-8b14-bef882b606a9
+		summarizeBy: none
+		sourceColumn: year_label
+
+		annotation SummarizationSetBy = Automatic
+
+	column has_annual_data
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: d4501709-673a-41a7-a6e4-64be9d75af52
+		summarizeBy: none
+		sourceColumn: has_annual_data
+
+		annotation SummarizationSetBy = Automatic
+
+	column is_latest_annual_year
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: ccd165b1-ba91-4f19-bfcf-cf1415694d27
+		summarizeBy: none
+		sourceColumn: is_latest_annual_year
+
+		annotation SummarizationSetBy = Automatic
+
+	partition bi_dim_year = m
+		mode: import
+		source =
+				let
+				    Source = PostgreSQL.Database("127.0.0.1:5432", "eu_dashboard"),
+				    analytics_bi_dim_year = Source{[Schema="analytics",Item="bi_dim_year"]}[Data]
+				in
+				    analytics_bi_dim_year
+
+	changedProperty = Name
+
+	annotation PBI_ResultType = Table
+
